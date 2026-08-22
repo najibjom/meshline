@@ -14,3 +14,4 @@
 - [x] Fix Network screen scrolling so all content can be reached by swipe on mobile.
 - [x] Fix Network screen scrolling in the Manus web preview.
 - [x] Add a user-entered custom network-storage contribution limit to the Storage controls.
+- [x] Fix shared preview scrolling so all long Meshline screens expose content below the fold.

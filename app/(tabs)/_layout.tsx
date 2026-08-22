@@ -17,6 +17,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "#98A1B3",
         tabBarLabelStyle: styles.label,
         tabBarStyle: [styles.tabBar, { height, paddingBottom: bottomPadding }],
+        sceneStyle: styles.scene,
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Chats", tabBarIcon: ({ color }) => <MaterialIcons name="chat-bubble-outline" size={23} color={color} /> }} />
@@ -29,4 +30,5 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: { backgroundColor: "#FFFFFF", borderTopColor: "#E8EBF3", borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 7 },
   label: { fontSize: 11, fontWeight: "700", marginTop: 1 },
+  scene: { flex: 1, minHeight: 0, overflow: "hidden" },
 });

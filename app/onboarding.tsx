@@ -46,7 +46,7 @@ export default function OnboardingScreen() {
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
           <View style={styles.top}><MeshlineMark size={56} /><Text style={styles.brand}>Meshline</Text></View>
           <View style={styles.copy}><Text style={styles.title}>Make a private identity.</Text><Text style={styles.subtitle}>No phone number, email, wallet, or technical setup. Choose a name and password; your identity is created on this device.</Text></View>
           <View style={styles.form}>
@@ -68,6 +68,7 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  scroll: { flexGrow: 1, flexShrink: 1, minHeight: 0 },
   content: { flexGrow: 1, padding: 24, paddingTop: 30, paddingBottom: 20 },
   top: { flexDirection: "row", alignItems: "center", gap: 11 },
   brand: { color: palette.ink, fontSize: 23, lineHeight: 29, fontWeight: "800", letterSpacing: -0.4 },

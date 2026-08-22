@@ -38,7 +38,7 @@ export default function StorageScreen() {
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator>
         <View style={styles.header}><Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable><Text style={styles.title}>Storage</Text><View style={styles.back} /></View>
         <Text style={styles.subtitle}>Personal history and volunteered network space are intentionally separate.</Text>
         <SectionCard style={styles.summary}>
@@ -83,7 +83,8 @@ function StorageSummary({ icon, label, value, detail, iconColor }: { icon: keyof
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingTop: 13, paddingBottom: 26 },
+  scroll: { flexGrow: 1, flexShrink: 1, minHeight: 0 },
+  content: { flexGrow: 1, padding: 20, paddingTop: 13, paddingBottom: 120 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   back: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   title: { color: palette.ink, fontSize: 18, lineHeight: 24, fontWeight: "800" },

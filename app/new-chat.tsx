@@ -33,7 +33,7 @@ export default function NewChatScreen() {
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
           <View style={styles.header}><Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable><Text style={styles.title}>New chat</Text><View style={styles.back} /></View>
           <Text style={styles.subtitle}>Enter a Meshline username to create a text-only conversation.</Text>
           <SectionCard style={styles.searchCard}>
@@ -52,7 +52,8 @@ export default function NewChatScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { flexGrow: 1, padding: 20, paddingTop: 13 },
+  scroll: { flexGrow: 1, flexShrink: 1, minHeight: 0 },
+  content: { flexGrow: 1, padding: 20, paddingTop: 13, paddingBottom: 28 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   back: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   title: { color: palette.ink, fontSize: 18, lineHeight: 24, fontWeight: "800" },

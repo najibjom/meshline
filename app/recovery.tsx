@@ -28,7 +28,7 @@ export default function RecoveryScreen() {
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator>
         <View style={styles.markWrap}><MeshlineMark size={52} /></View>
         <Text style={styles.title}>{identity.recoveryAcknowledged ? "Your recovery codes" : "Save your recovery codes."}</Text>
         <Text style={styles.subtitle}>These private codes are the fallback for a decentralized identity. Save them somewhere only you control.</Text>
@@ -44,7 +44,8 @@ export default function RecoveryScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 24, paddingTop: 35, paddingBottom: 23 },
+  scroll: { flexGrow: 1, flexShrink: 1, minHeight: 0 },
+  content: { flexGrow: 1, padding: 24, paddingTop: 35, paddingBottom: 23 },
   markWrap: { marginBottom: 26 },
   title: { color: palette.ink, fontSize: 31, lineHeight: 38, fontWeight: "800", letterSpacing: -0.7 },
   subtitle: { color: palette.muted, fontSize: 16, lineHeight: 23, marginTop: 10 },

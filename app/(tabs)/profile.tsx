@@ -14,7 +14,7 @@ export default function ProfileScreen() {
 
   return (
     <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator>
         <Text style={styles.title}>Profile</Text>
         <SectionCard style={styles.profileCard}>
           <Avatar label={identity.username.slice(1)} size={62} />
@@ -45,7 +45,8 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 18, paddingTop: 10, paddingBottom: 28 },
+  scroll: { flexGrow: 1, flexShrink: 1, minHeight: 0 },
+  content: { flexGrow: 1, padding: 18, paddingTop: 10, paddingBottom: 120 },
   title: { color: palette.ink, fontSize: 28, lineHeight: 34, fontWeight: "800", letterSpacing: -0.55, marginBottom: 19 },
   profileCard: { flexDirection: "row", gap: 15, padding: 17, alignItems: "center", marginBottom: 23 },
   profileCopy: { flex: 1, gap: 3 },
