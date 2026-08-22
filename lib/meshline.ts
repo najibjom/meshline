@@ -7,6 +7,7 @@ export type DeliveryStatus = "sending" | "delivered" | "local";
 export type MessageDirection = "outbound" | "inbound" | "system";
 
 export type Identity = {
+  displayName: string;
   username: string;
   deviceId: string;
   createdAt: string;
@@ -115,6 +116,15 @@ export function isValidUsername(value: string) {
   return /^@[a-z0-9_]{3,24}$/.test(normalizeUsername(value));
 }
 
+export function normalizeDisplayName(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+export function isValidDisplayName(value: string) {
+  const name = normalizeDisplayName(value);
+  return name.length >= 2 && name.length <= 40;
+}
+
 function codeFromUuid() {
   return Crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
 }
@@ -123,7 +133,8 @@ function makeRecoveryCodes() {
   return Array.from({ length: 6 }, () => `${codeFromUuid().slice(0, 5)}-${codeFromUuid().slice(5, 10)}`);
 }
 
-export async function makeIdentity(usernameInput: string, password: string): Promise<MeshlineState> {
+export async function makeIdentity(displayNameInput: string, usernameInput: string, password: string): Promise<MeshlineState> {
+  const displayName = normalizeDisplayName(displayNameInput);
   const username = normalizeUsername(usernameInput);
   const deviceId = Crypto.randomUUID();
   const recoveryCodes = makeRecoveryCodes();
@@ -161,7 +172,7 @@ export async function makeIdentity(usernameInput: string, password: string): Pro
   };
 
   return {
-    identity: { username, deviceId, createdAt, recoveryAcknowledged: false },
+    identity: { displayName, username, deviceId, createdAt, recoveryAcknowledged: false },
     conversations: [guideConversation],
     messages: { [guideConversation.id]: [guideMessage] },
     networkSettings: defaultNetworkSettings,

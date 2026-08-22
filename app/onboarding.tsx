@@ -10,7 +10,8 @@ import { haptic } from "@/lib/haptics";
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { createIdentity, validateUsername } = useMeshline();
+  const { createIdentity, validateDisplayName, validateUsername } = useMeshline();
+  const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +19,11 @@ export default function OnboardingScreen() {
   const [creating, setCreating] = useState(false);
 
   const create = async () => {
+    if (!validateDisplayName(displayName)) {
+      setError("Enter a name between 2 and 40 characters.");
+      haptic.warning();
+      return;
+    }
     const validName = validateUsername(username);
     if (!validName) {
       setError("Use 3–24 lowercase letters, numbers, or underscores.");
@@ -32,7 +38,7 @@ export default function OnboardingScreen() {
     setError("");
     setCreating(true);
     try {
-      await createIdentity(username, password);
+      await createIdentity(displayName, username, password);
       haptic.success();
       router.replace("/recovery");
     } catch {
@@ -48,8 +54,11 @@ export default function OnboardingScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
           <View style={styles.top}><MeshlineMark size={56} /><Text style={styles.brand}>Meshline</Text></View>
-          <View style={styles.copy}><Text style={styles.title}>Make a private identity.</Text><Text style={styles.subtitle}>No phone number, email, wallet, or technical setup. Choose a name and password; your identity is created on this device.</Text></View>
+          <View style={styles.copy}><Text style={styles.title}>Make a private identity.</Text><Text style={styles.subtitle}>No phone number, email, wallet, or technical setup. Choose a name, username, and password; your identity is created on this device.</Text></View>
           <View style={styles.form}>
+            <Text style={styles.label}>DISPLAY NAME</Text>
+            <View style={styles.inputWrap}><TextInput value={displayName} onChangeText={setDisplayName} autoCapitalize="words" autoCorrect placeholder="Your name" placeholderTextColor="#A5ADBC" style={[styles.input, { paddingLeft: 15 }]} returnKeyType="next" /></View>
+            <Text style={styles.hint}>This is the name people see first on your profile and in chats.</Text>
             <Text style={styles.label}>USERNAME</Text>
             <View style={styles.inputWrap}><Text style={styles.prefix}>@</Text><TextInput value={username.replace(/^@/, "")} onChangeText={(value) => setUsername(value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} autoCapitalize="none" autoCorrect={false} placeholder="yourname" placeholderTextColor="#A5ADBC" style={styles.input} returnKeyType="next" /></View>
             <Text style={styles.hint}>This prototype checks availability only on your device. Network-wide name registration comes later.</Text>

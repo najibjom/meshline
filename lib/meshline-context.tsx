@@ -5,6 +5,7 @@ import {
   Conversation,
   emptyMeshlineState,
   Identity,
+  isValidDisplayName,
   isValidUsername,
   loadMeshlineState,
   makeIdentity,
@@ -18,12 +19,14 @@ import {
 type MeshlineContextValue = {
   ready: boolean;
   state: MeshlineState;
-  createIdentity: (username: string, password: string) => Promise<void>;
+  createIdentity: (displayName: string, username: string, password: string) => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
   acknowledgeRecovery: () => Promise<void>;
   startConversation: (username: string) => Promise<string>;
   sendMessage: (conversationId: string, text: string) => Promise<void>;
   updateNetworkSettings: (settings: Partial<NetworkSettings>) => Promise<void>;
   identity: Identity | null;
+  validateDisplayName: (displayName: string) => boolean;
   validateUsername: (username: string) => boolean;
 };
 
@@ -48,8 +51,8 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const createIdentity = useCallback(async (username: string, password: string) => {
-    const next = await makeIdentity(username, password);
+  const createIdentity = useCallback(async (displayName: string, username: string, password: string) => {
+    const next = await makeIdentity(displayName, username, password);
     setState(next);
     await persistMeshlineState(next);
   }, []);
@@ -58,6 +61,14 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     commit((current) => ({
       ...current,
       identity: current.identity ? { ...current.identity, recoveryAcknowledged: true } : null,
+    }));
+  }, [commit]);
+
+  const updateDisplayName = useCallback(async (displayName: string) => {
+    const normalized = displayName.trim().replace(/\s+/g, " ");
+    commit((current) => ({
+      ...current,
+      identity: current.identity ? { ...current.identity, displayName: normalized } : null,
     }));
   }, [commit]);
 
@@ -133,13 +144,15 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     ready,
     state,
     createIdentity,
+    updateDisplayName,
     acknowledgeRecovery,
     startConversation,
     sendMessage,
     updateNetworkSettings,
     identity: state.identity,
+    validateDisplayName: isValidDisplayName,
     validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, createIdentity, ready, sendMessage, startConversation, state, updateNetworkSettings]);
+  }), [acknowledgeRecovery, createIdentity, ready, sendMessage, startConversation, state, updateDisplayName, updateNetworkSettings]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }

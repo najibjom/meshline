@@ -20,12 +20,19 @@ vi.mock("react-native", () => ({ Platform: { OS: "web" } }));
 import {
   calculatePersonalBytes,
   emptyMeshlineState,
+  isValidDisplayName,
   isValidUsername,
   normalizeUsername,
   storageLimitLabel,
 } from "../lib/meshline";
 
 describe("Meshline local identity rules", () => {
+  it("keeps display names separate from unique usernames", () => {
+    expect(isValidDisplayName("Alex Johnson")).toBe(true);
+    expect(isValidDisplayName("A")).toBe(false);
+    expect(isValidDisplayName("x".repeat(41))).toBe(false);
+  });
+
   it("normalizes usernames without exposing complex identity data", () => {
     expect(normalizeUsername(" Alice_9 ")).toBe("@alice_9");
     expect(normalizeUsername("@bob")).toBe("@bob");
