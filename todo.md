@@ -12,3 +12,5 @@
 - [x] Optimize the generated launcher-icon copies below the checkpoint size limit and save the final project version.
 - [x] Upload the completed Meshline project to the user-authorized GitHub repository.
 - [x] Fix Network screen scrolling so all content can be reached by swipe on mobile.
+- [x] Fix Network screen scrolling in the Manus web preview.
+- [x] Add a user-entered custom network-storage contribution limit to the Storage controls.

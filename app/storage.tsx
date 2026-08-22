@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { palette, PrimaryButton, SectionCard } from "@/components/meshline-ui";
 import { ScreenContainer } from "@/components/screen-container";
@@ -15,7 +16,25 @@ export default function StorageScreen() {
   const { state, updateNetworkSettings } = useMeshline();
   const personal = formatBytesAsMb(calculatePersonalBytes(state.messages));
   const { storageLimitMb } = state.networkSettings;
+  const [customLimit, setCustomLimit] = useState("");
+  const [customError, setCustomError] = useState("");
+  const isCustomLimit = storageLimitMb > 0 && !storageOptions.includes(storageLimitMb);
+
+  useEffect(() => {
+    if (isCustomLimit) setCustomLimit(String(storageLimitMb));
+  }, [isCustomLimit, storageLimitMb]);
+
   const setLimit = (limitMb: number) => { haptic.medium(); void updateNetworkSettings({ storageLimitMb: limitMb }); };
+  const applyCustomLimit = () => {
+    const amount = Number.parseInt(customLimit, 10);
+    if (!Number.isInteger(amount) || amount < 1 || amount > 51200) {
+      setCustomError("Enter a whole number from 1 MB to 50 GB.");
+      haptic.warning();
+      return;
+    }
+    setCustomError("");
+    setLimit(amount);
+  };
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
@@ -29,7 +48,29 @@ export default function StorageScreen() {
         </SectionCard>
         <Text style={styles.sectionLabel}>CONTRIBUTION LIMIT</Text>
         <Text style={styles.sectionText}>Meshline will never silently exceed this limit. When a future network node reaches its ceiling, it stops accepting replicas until safely replaceable ones can be released.</Text>
-        <View style={styles.options}>{storageOptions.map((option) => <Pressable key={option} onPress={() => setLimit(option)} style={({ pressed }) => [styles.option, storageLimitMb === option && styles.selectedOption, pressed && styles.pressed]}><Text style={[styles.optionText, storageLimitMb === option && styles.selectedOptionText]}>{storageLimitLabel(option)}</Text>{storageLimitMb === option ? <MaterialIcons name="check-circle" size={18} color={palette.indigo} /> : null}</Pressable>)}</View>
+        <View style={styles.options}>{storageOptions.map((option) => <Pressable key={option} onPress={() => { setCustomError(""); setLimit(option); }} style={({ pressed }) => [styles.option, storageLimitMb === option && styles.selectedOption, pressed && styles.pressed]}><Text style={[styles.optionText, storageLimitMb === option && styles.selectedOptionText]}>{storageLimitLabel(option)}</Text>{storageLimitMb === option ? <MaterialIcons name="check-circle" size={18} color={palette.indigo} /> : null}</Pressable>)}</View>
+        <SectionCard style={[styles.customCard, isCustomLimit && styles.customCardSelected]}>
+          <View style={styles.customHeader}>
+            <View style={styles.customIcon}><MaterialIcons name="tune" size={19} color={palette.indigo} /></View>
+            <View style={styles.customCopy}><Text style={styles.customTitle}>Custom limit</Text><Text style={styles.customCaption}>Choose the exact network-storage space to contribute.</Text></View>
+          </View>
+          <View style={styles.customInputRow}>
+            <TextInput
+              value={customLimit}
+              onChangeText={(value) => { setCustomLimit(value.replace(/[^0-9]/g, "")); setCustomError(""); }}
+              placeholder="Enter amount"
+              placeholderTextColor="#9AA3B3"
+              keyboardType="number-pad"
+              returnKeyType="done"
+              onSubmitEditing={applyCustomLimit}
+              style={styles.customInput}
+              accessibilityLabel="Custom network storage limit in megabytes"
+            />
+            <Text style={styles.unit}>MB</Text>
+            <Pressable onPress={applyCustomLimit} style={({ pressed }) => [styles.applyButton, pressed && styles.pressed]}><Text style={styles.applyText}>Use</Text></Pressable>
+          </View>
+          {customError ? <Text style={styles.customError}>{customError}</Text> : <Text style={styles.customHint}>Accepted range: 1 MB to 50 GB. Your exact preference is saved on this device.</Text>}
+        </SectionCard>
         <View style={styles.note}><MaterialIcons name="info-outline" size={18} color={palette.amber} /><Text style={styles.noteText}>Storage contribution is not active until the encrypted P2P replication layer has been tested. Your choice is already saved locally.</Text></View>
         <PrimaryButton label="Save contribution preference" onPress={() => { haptic.success(); router.back(); }} icon="check" />
       </ScrollView>
@@ -57,11 +98,25 @@ const styles = StyleSheet.create({
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: palette.line, marginLeft: 16 },
   sectionLabel: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 25, marginLeft: 3 },
   sectionText: { color: palette.muted, fontSize: 13, lineHeight: 19, marginTop: 7 },
-  options: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 15, marginBottom: 18 },
+  options: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 15, marginBottom: 12 },
   option: { minWidth: "30%", flexGrow: 1, height: 48, borderRadius: 14, borderWidth: 1, borderColor: "#DDE2EC", backgroundColor: "#FFFFFF", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
   selectedOption: { borderColor: palette.indigo, backgroundColor: palette.indigoSoft },
   optionText: { color: palette.ink, fontSize: 14, lineHeight: 19, fontWeight: "700" },
   selectedOptionText: { color: palette.indigo },
+  customCard: { padding: 14, marginBottom: 18 },
+  customCardSelected: { borderColor: palette.indigo, borderWidth: 1.5 },
+  customHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  customIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: palette.indigoSoft },
+  customCopy: { flex: 1 },
+  customTitle: { color: palette.ink, fontSize: 15, lineHeight: 20, fontWeight: "800" },
+  customCaption: { color: palette.muted, fontSize: 12, lineHeight: 17, marginTop: 1 },
+  customInputRow: { minHeight: 48, marginTop: 12, borderRadius: 14, borderColor: "#DDE2EC", borderWidth: 1, backgroundColor: "#F9FAFC", flexDirection: "row", alignItems: "center", paddingLeft: 13, gap: 9 },
+  customInput: { flex: 1, minHeight: 46, color: palette.ink, fontSize: 16, fontWeight: "700", paddingVertical: 0 },
+  unit: { color: palette.muted, fontSize: 13, lineHeight: 18, fontWeight: "800" },
+  applyButton: { height: 36, borderRadius: 11, backgroundColor: palette.indigo, justifyContent: "center", alignItems: "center", paddingHorizontal: 13, marginRight: 5 },
+  applyText: { color: "#FFFFFF", fontSize: 13, lineHeight: 17, fontWeight: "800" },
+  customHint: { color: "#7B8598", fontSize: 11, lineHeight: 16, marginTop: 8 },
+  customError: { color: palette.coral, fontSize: 11, lineHeight: 16, fontWeight: "700", marginTop: 8 },
   note: { flexDirection: "row", gap: 9, padding: 13, borderRadius: 15, backgroundColor: palette.amberSoft, marginBottom: 20, alignItems: "flex-start" },
   noteText: { flex: 1, color: "#8D5C10", fontSize: 13, lineHeight: 18 },
   pressed: { opacity: 0.68 },

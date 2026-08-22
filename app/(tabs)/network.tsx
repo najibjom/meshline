@@ -99,7 +99,7 @@ function PreferenceRow({ icon, title, detail, value, onChange, last = false }: {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { padding: 18, paddingTop: 10, paddingBottom: 30 },
+  content: { flexGrow: 1, padding: 18, paddingTop: 10, paddingBottom: 120 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   title: { color: palette.ink, fontSize: 28, lineHeight: 34, fontWeight: "800", letterSpacing: -0.55 },
   subtitle: { color: palette.muted, fontSize: 15, lineHeight: 21, marginTop: 8, marginBottom: 20, maxWidth: 340 },
