@@ -22,7 +22,14 @@ export default function NetworkScreen() {
 
   return (
     <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        scrollEnabled
+        nestedScrollEnabled
+        alwaysBounceVertical
+        showsVerticalScrollIndicator
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Network</Text>
           <StatusPill icon="info-outline">Prototype mode</StatusPill>
@@ -91,6 +98,7 @@ function PreferenceRow({ icon, title, detail, value, onChange, last = false }: {
 }
 
 const styles = StyleSheet.create({
+  scroll: { flex: 1 },
   content: { padding: 18, paddingTop: 10, paddingBottom: 30 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   title: { color: palette.ink, fontSize: 28, lineHeight: 34, fontWeight: "800", letterSpacing: -0.55 },
