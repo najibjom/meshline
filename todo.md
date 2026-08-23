@@ -97,4 +97,4 @@
 - [x] Publish the transient-service retry repair to production-apk for the installed 1.0.7 clients.
 - [x] Restore the fixed Chats connection banner after its reported disappearance in the latest 1.0.7 update.
 - [x] Resolve the renewed false Meshline service-unavailable state while keeping the fixed Chats banner visible.
-- [ ] Publish the native relay-pinning and connection-stability repair to production-apk for runtime 1.0.7.
+- [x] Publish the native relay-pinning and connection-stability repair to production-apk for runtime 1.0.7.
