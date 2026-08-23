@@ -4,13 +4,15 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { AppState, Platform } from "react-native";
 
 import {
+  changeLocalUsername,
+  clearLocalSession,
   Contact,
   Conversation,
+  deleteLocalMeshlineAccount,
   emptyMeshlineState,
   Identity,
   isValidDisplayName,
   isValidUsername,
-  clearLocalSession,
   loadMeshlineState,
   loadLocalSession,
   makeIdentity,
@@ -38,6 +40,7 @@ type MeshlineContextValue = {
   createIdentity: (displayName: string, username: string, password: string) => Promise<void>;
   loginIdentity: (username: string, password: string) => Promise<boolean>;
   updateDisplayName: (displayName: string) => Promise<void>;
+  updateUsername: (username: string, password: string) => Promise<boolean>;
   updateProfileDescription: (description: string) => Promise<void>;
   acknowledgeRecovery: () => Promise<void>;
   startConversation: (username: string) => Promise<string>;
@@ -51,6 +54,7 @@ type MeshlineContextValue = {
   unlockWithBiometrics: () => Promise<boolean>;
   continueWithPassword: () => void;
   logout: () => void;
+  deleteAccount: (username: string, password: string) => Promise<boolean>;
   validateDisplayName: (displayName: string) => boolean;
   validateUsername: (username: string) => boolean;
 };
@@ -114,6 +118,15 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, displayName: normalized } : null }));
   }, [commit]);
 
+  const updateUsername = useCallback(async (usernameInput: string, password: string) => {
+    const nextUsername = normalizeUsername(usernameInput);
+    if (!state.identity || !isValidUsername(nextUsername)) return false;
+    const changed = await changeLocalUsername(state.identity.username, nextUsername, password);
+    if (!changed) return false;
+    commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, username: nextUsername } : null }));
+    return true;
+  }, [commit, state.identity]);
+
   const updateProfileDescription = useCallback(async (description: string) => {
     commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, description: description.trim().slice(0, 160) } : null }));
   }, [commit]);
@@ -122,11 +135,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     const username = normalizeUsername(usernameInput);
     const displayName = normalizeDisplayName(displayNameInput) || username.slice(1);
     const contact: Contact = { id: username, username, displayName, createdAt: new Date().toISOString() };
-    commit((current) => ({
-      ...current,
-      contacts: [contact, ...current.contacts.filter((candidate) => candidate.username !== username)],
-      conversations: current.conversations.map((conversation) => conversation.peerUsername === username ? { ...conversation, peerDisplayName: displayName } : conversation),
-    }));
+    commit((current) => ({ ...current, contacts: [contact, ...current.contacts.filter((candidate) => candidate.username !== username)], conversations: current.conversations.map((conversation) => conversation.peerUsername === username ? { ...conversation, peerDisplayName: displayName } : conversation) }));
   }, [commit]);
 
   const removeContact = useCallback(async (usernameInput: string) => {
@@ -187,10 +196,20 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
 
   const continueWithPassword = useCallback(() => { setAppLocked(false); setIsAuthenticated(false); }, []);
   const logout = useCallback(() => { setAppLocked(false); setIsAuthenticated(false); void clearLocalSession(); }, []);
+  const deleteAccount = useCallback(async (usernameInput: string, password: string) => {
+    if (!state.identity || !matchesIdentityUsername(state.identity.username, usernameInput)) return false;
+    const accepted = await verifyLocalIdentity(usernameInput, password);
+    if (!accepted) return false;
+    await deleteLocalMeshlineAccount();
+    setState(emptyMeshlineState);
+    setAppLocked(false);
+    setIsAuthenticated(false);
+    return true;
+  }, [state.identity]);
 
   const value = useMemo<MeshlineContextValue>(() => ({
-    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateProfileDescription, acknowledgeRecovery, startConversation, saveContact, removeContact, toggleConversationPin, sendMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateDisplayName, updateNetworkSettings, updatePrivacySettings, updateProfileDescription]);
+    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, saveContact, removeContact, toggleConversationPin, sendMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
+  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateDisplayName, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateUsername]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }

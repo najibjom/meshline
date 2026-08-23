@@ -25,5 +25,7 @@
 - [x] Persist the local authenticated session across normal app restarts until logout or local data reset.
 - [x] Verify the synchronized project retains the persistent local-session behavior.
 - [x] Add a clear Profile-level logout button that ends the local session without deleting local data.
+- [x] Add local username editing with identity-reference consistency.
+- [x] Add a clearly confirmed Profile account-deletion flow that removes all local Meshline data.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.

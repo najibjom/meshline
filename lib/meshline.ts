@@ -109,6 +109,13 @@ const secureValueStore = {
     }
     return SecureStore.getItemAsync(key);
   },
+  async remove(key: string) {
+    if (Platform.OS === "web") {
+      getWebStorage()?.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
 };
 
 export async function loadLocalSession() {
@@ -121,6 +128,26 @@ export async function persistLocalSession() {
 
 export async function clearLocalSession() {
   await secureValueStore.set(AUTH_SESSION_KEY, "");
+}
+
+export async function changeLocalUsername(currentUsernameInput: string, nextUsernameInput: string, password: string) {
+  const [deviceMarker, storedVerifier] = await Promise.all([secureValueStore.get(IDENTITY_MARKER_KEY), secureValueStore.get(PASSWORD_VERIFIER_KEY)]);
+  if (!deviceMarker || !storedVerifier) return false;
+  const currentVerifier = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, `${deviceMarker}:${normalizeUsername(currentUsernameInput)}:${password}`);
+  if (currentVerifier !== storedVerifier) return false;
+  const nextVerifier = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, `${deviceMarker}:${normalizeUsername(nextUsernameInput)}:${password}`);
+  await secureValueStore.set(PASSWORD_VERIFIER_KEY, nextVerifier);
+  return true;
+}
+
+export async function deleteLocalMeshlineAccount() {
+  await Promise.all([
+    AsyncStorage.removeItem(APP_STATE_KEY),
+    secureValueStore.remove(RECOVERY_CODES_KEY),
+    secureValueStore.remove(IDENTITY_MARKER_KEY),
+    secureValueStore.remove(PASSWORD_VERIFIER_KEY),
+    secureValueStore.remove(AUTH_SESSION_KEY),
+  ]);
 }
 
 export async function loadMeshlineState(): Promise<MeshlineState> {
