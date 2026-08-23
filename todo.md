@@ -90,4 +90,4 @@
 - [x] Build and verify a separate x86_64-compatible Meshline APK for the Windows Pixel emulator without changing the phone release path.
 - [x] Fix relay device registration so two connected installed Meshline clients can discover one another by username.
 - [x] Publish relay-readiness diagnostics to production-apk for the installed 1.0.7 phone and emulator runtimes.
-- [ ] Push the completed emulator compatibility and relay-readiness updates to the authorized Meshline GitHub repository.
+- [x] Push the completed emulator compatibility and relay-readiness updates to the authorized Meshline GitHub repository.
