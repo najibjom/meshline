@@ -37,6 +37,7 @@ import {
 import nacl from "tweetnacl";
 import * as naclUtil from "tweetnacl-util";
 import { decryptTextFromDevice, encryptTextForDevice } from "../lib/transport";
+import { classifyMeshlineConnection, describeMeshlineConnection } from "../lib/connection-status";
 
 describe("Meshline local identity rules", () => {
   it("keeps display names separate from unique usernames", () => {
@@ -115,5 +116,11 @@ describe("Meshline transparent storage accounting", () => {
       ],
     }, 30, now);
     expect(result.chat.map((message) => message.id)).toEqual(["new"]);
+  });
+
+  it("separates an offline device from an unavailable Meshline service", () => {
+    expect(classifyMeshlineConnection(false, null)).toBe("offline");
+    expect(classifyMeshlineConnection(true, false)).toBe("service-unavailable");
+    expect(describeMeshlineConnection("service-unavailable").detail).toContain("internet is working");
   });
 });

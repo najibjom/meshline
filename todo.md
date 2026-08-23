@@ -48,6 +48,8 @@
 - [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
 - [x] Add in-app update checking and user-controlled reload for compatible updates.
 - [ ] Create and install the one-time update-enabled Meshline APK in both Xiaomi Spaces.
+- [x] Add a persistent Telegram-style connection banner to the Meshline chat list.
+- [x] Distinguish offline device, unavailable relay service, and unavailable update service in user-facing diagnostics.
 - [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
 - [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
 - [x] Add in-app update checking, release notes, and user-controlled reload for compatible updates.
@@ -56,3 +58,5 @@
 - [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
 - [x] Design a managed in-app update mechanism for future Meshline APK releases.
 - [x] Add in-app checks and user-controlled reload for compatible over-the-air updates.
+- [ ] Repair low-contrast and invisible text or button states throughout the mobile interface.
+- [ ] Add a user-controlled functional light and dark mode across Meshline.
