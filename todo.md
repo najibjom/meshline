@@ -73,4 +73,5 @@
 - [x] Fix the 1.0.7 Android App updates action background because it currently renders transparent behind white text.
 - [x] Produce the corrected final Meshline 1.0.8 base APK with an opaque native update action and matched 1.0.8 OTA/service compatibility.
 - [ ] Generate the final 1.0.8 Android test APK from the verified contrast-safe base and verify its package metadata.
+- [x] Publish a matching production-apk JavaScript update for runtime 1.0.8 so the installed base can show Download update.
 - [x] Push the current Meshline changes to the authorized GitHub repository and verify the remote branch.
