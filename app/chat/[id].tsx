@@ -6,7 +6,7 @@ import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, 
 
 import { Avatar, MeshlineMark, palette, StatusPill } from "@/components/meshline-ui";
 import { ScreenContainer } from "@/components/screen-container";
-import { formatMessageTime, Message } from "@/lib/meshline";
+import { formatMessageTime, isLocalChannelOwner, Message } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
 import { haptic } from "@/lib/haptics";
 
@@ -29,9 +29,8 @@ export default function ChatScreen() {
 
   const isChannel = conversation.kind === "channel";
   const isGroup = conversation.kind === "group";
-  // Device identity remains stable when a user changes their local @username.
-  // Legacy local channels lack this field, so they remain writable on the creating device.
-  const canPost = !isChannel || !conversation.createdByDeviceId || conversation.createdByDeviceId === identity?.deviceId;
+  const isChannelOwner = isLocalChannelOwner(conversation, identity);
+  const canPost = !isChannel || isChannelOwner;
   const memberCount = conversation.memberUsernames?.length ?? 0;
 
   const send = async () => {
@@ -61,8 +60,8 @@ export default function ChatScreen() {
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable>
           {conversation.isGuide ? <View style={styles.guideMark}><MeshlineMark size={27} /></View> : isGroup ? <View style={styles.spaceMark}><MaterialIcons name="group" size={22} color={palette.indigo} /></View> : isChannel ? <View style={styles.spaceMark}><MaterialIcons name="campaign" size={22} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={38} tone="emerald" />}
-          <View style={styles.headerCopy}><Text style={styles.name}>{conversation.peerDisplayName}</Text><Text style={styles.handle}>{isGroup ? `${conversation.peerUsername} · ${memberCount || 1} member${memberCount === 1 ? "" : "s"}` : isChannel ? `${conversation.peerUsername} · ${memberCount || 1} subscriber${memberCount === 1 ? "" : "s"}` : conversation.peerUsername}</Text></View>
-          <Pressable onPress={() => void toggleConversationPin(conversation.id)} hitSlop={8} style={({ pressed }) => [styles.pinButton, conversation.isPinned && styles.pinButtonActive, pressed && styles.pressed]} accessibilityLabel={conversation.isPinned ? "Unpin conversation" : "Pin conversation"}><MaterialIcons name="push-pin" size={18} color={conversation.isPinned ? "#FFFFFF" : palette.indigo} /></Pressable>
+          <View style={styles.headerCopy}><Text numberOfLines={1} style={styles.name}>{conversation.peerDisplayName}</Text><Text numberOfLines={1} style={styles.handle}>{isGroup ? `${conversation.peerUsername} · ${memberCount || 1} member${memberCount === 1 ? "" : "s"}` : isChannel ? `${conversation.peerUsername} · ${memberCount || 1} subscriber${memberCount === 1 ? "" : "s"}` : conversation.peerUsername}</Text></View>
+          <View style={styles.headerActions}>{isChannel && isChannelOwner ? <Pressable onPress={() => router.push({ pathname: "/channel-settings/[id]", params: { id: conversation.id } })} hitSlop={8} style={({ pressed }) => [styles.pinButton, pressed && styles.pressed]} accessibilityLabel="Edit channel settings"><MaterialIcons name="edit" size={18} color={palette.indigo} /></Pressable> : null}<Pressable onPress={() => void toggleConversationPin(conversation.id)} hitSlop={8} style={({ pressed }) => [styles.pinButton, conversation.isPinned && styles.pinButtonActive, pressed && styles.pressed]} accessibilityLabel={conversation.isPinned ? "Unpin conversation" : "Pin conversation"}><MaterialIcons name="push-pin" size={18} color={conversation.isPinned ? "#FFFFFF" : palette.indigo} /></Pressable></View>
         </View>
         <FlatList
           ref={listRef}
@@ -108,6 +107,7 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, gap: 0 },
   name: { color: palette.ink, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   handle: { color: palette.muted, fontSize: 12, lineHeight: 16 },
+  headerActions: { flexDirection: "row", gap: 6 },
   pinButton: { width: 37, height: 37, borderRadius: 12, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
   pinButtonActive: { backgroundColor: palette.indigo },
   messages: { padding: 15, paddingBottom: 22, flexGrow: 1 },

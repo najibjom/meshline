@@ -32,5 +32,7 @@
 - [x] Move local username editing into the Profile identity card and remove the password prompt.
 - [x] Add user-defined @usernames to local group chats and channels.
 - [x] Fix channel owner posting after a local username change.
+- [x] Add owner-editable channel title, @username, and description settings.
+- [x] Restore and verify the inline profile @username pencil control.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.

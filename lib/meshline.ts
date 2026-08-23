@@ -193,6 +193,11 @@ export function isValidDisplayName(value: string) {
   return name.length >= 2 && name.length <= 40;
 }
 
+/** Local owner check deliberately uses the immutable device ID, not a mutable @username. */
+export function isLocalChannelOwner(conversation: Conversation, identity: Identity | null) {
+  return conversation.kind === "channel" && Boolean(identity) && (!conversation.createdByDeviceId || conversation.createdByDeviceId === identity?.deviceId);
+}
+
 export function matchesIdentityUsername(storedUsername: string, usernameInput: string) {
   return storedUsername === normalizeUsername(usernameInput);
 }

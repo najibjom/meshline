@@ -20,6 +20,7 @@ vi.mock("react-native", () => ({ Platform: { OS: "web" } }));
 import {
   calculatePersonalBytes,
   emptyMeshlineState,
+  isLocalChannelOwner,
   isValidDisplayName,
   isValidUsername,
   matchesIdentityUsername,
@@ -51,6 +52,14 @@ describe("Meshline local identity rules", () => {
   it("matches local login usernames without relying on a display name", () => {
     expect(matchesIdentityUsername("@alex_mesh", "Alex_Mesh")).toBe(true);
     expect(matchesIdentityUsername("@alex_mesh", "@other_user")).toBe(false);
+  });
+
+  it("keeps channel ownership bound to a device when a username changes", () => {
+    const channel = { id: "channel-1", peerUsername: "@updates", peerDisplayName: "Updates", createdAt: "2026-08-23T00:00:00.000Z", updatedAt: "2026-08-23T00:00:00.000Z", kind: "channel" as const, createdByDeviceId: "device-owner" };
+    const renamedOwner = { displayName: "Alex", description: "", username: "@new_alex", deviceId: "device-owner", createdAt: "2026-08-23T00:00:00.000Z", recoveryAcknowledged: true };
+    const anotherDevice = { ...renamedOwner, deviceId: "device-other" };
+    expect(isLocalChannelOwner(channel, renamedOwner)).toBe(true);
+    expect(isLocalChannelOwner(channel, anotherDevice)).toBe(false);
   });
 });
 
