@@ -23,5 +23,6 @@
 - [x] Add on-device privacy controls including biometric lock, local-data retention, export, and device logout.
 - [x] Add an editable profile description displayed below the name and @username.
 - [x] Persist the local authenticated session across normal app restarts until logout or local data reset.
+- [x] Verify the synchronized project retains the persistent local-session behavior.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.
