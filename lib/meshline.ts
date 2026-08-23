@@ -39,6 +39,7 @@ export type Conversation = {
   createdBy?: string;
   createdByDeviceId?: string;
   isGuide?: boolean;
+  isSavedMessages?: boolean;
   isPinned?: boolean;
 };
 
@@ -110,6 +111,31 @@ export const emptyMeshlineState: MeshlineState = {
   privacySettings: defaultPrivacySettings,
 };
 
+export const SAVED_MESSAGES_CONVERSATION_ID = "saved-messages";
+
+export function ensureSavedMessagesConversation(state: MeshlineState): MeshlineState {
+  if (!state.identity || state.conversations.some((conversation) => conversation.isSavedMessages || conversation.id === SAVED_MESSAGES_CONVERSATION_ID)) return state;
+  const createdAt = state.identity.createdAt || new Date().toISOString();
+  const conversation: Conversation = {
+    id: SAVED_MESSAGES_CONVERSATION_ID,
+    peerUsername: state.identity.username,
+    peerDisplayName: "Saved Messages",
+    createdAt,
+    updatedAt: createdAt,
+    isSavedMessages: true,
+    isPinned: true,
+  };
+  const welcome: Message = {
+    id: Crypto.randomUUID(),
+    conversationId: conversation.id,
+    body: "Saved Messages is your private space for notes and saved text on this device.",
+    direction: "system",
+    status: "local",
+    createdAt,
+  };
+  return { ...state, conversations: [conversation, ...state.conversations], messages: { ...state.messages, [conversation.id]: [welcome] } };
+}
+
 const getWebStorage = () => {
   if (Platform.OS !== "web") return null;
   return globalThis.localStorage;
@@ -171,7 +197,7 @@ export async function loadMeshlineState(): Promise<MeshlineState> {
 
   try {
     const parsed = JSON.parse(raw) as Partial<MeshlineState>;
-    return {
+    const loaded: MeshlineState = {
       identity: parsed.identity ?? null,
       contacts: parsed.contacts ?? [],
       conversations: parsed.conversations ?? [],
@@ -179,6 +205,9 @@ export async function loadMeshlineState(): Promise<MeshlineState> {
       networkSettings: { ...defaultNetworkSettings, ...parsed.networkSettings },
       privacySettings: { ...defaultPrivacySettings, ...parsed.privacySettings },
     };
+    const withSavedMessages = ensureSavedMessagesConversation(loaded);
+    if (withSavedMessages !== loaded) await AsyncStorage.setItem(APP_STATE_KEY, JSON.stringify(withSavedMessages));
+    return withSavedMessages;
   } catch {
     return emptyMeshlineState;
   }

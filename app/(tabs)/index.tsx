@@ -8,10 +8,12 @@ import { Avatar, MeshlineMark, palette } from "@/components/meshline-ui";
 import { ScreenContainer } from "@/components/screen-container";
 import { formatConversationTime, Message } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
+import { useColors } from "@/hooks/use-colors";
 
 export default function ChatsScreen() {
   const router = useRouter();
   const { ready, identity, isAuthenticated, state } = useMeshline();
+  const colors = useColors();
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -21,14 +23,14 @@ export default function ChatsScreen() {
 
   const filteredConversations = useMemo(() => state.conversations
     .filter((conversation) => `${conversation.peerDisplayName} ${conversation.peerUsername}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((left, right) => Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned)) || new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()), [query, state.conversations]);
+    .sort((left, right) => Number(Boolean(right.isSavedMessages)) - Number(Boolean(left.isSavedMessages)) || Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned)) || new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()), [query, state.conversations]);
 
   if (!ready || !identity || !isAuthenticated) {
     return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
   }
 
   return (
-    <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
+    <ScreenContainer edges={["top", "left", "right"]}>
       <View style={styles.connectionWrap}>
         <MeshlineConnectionBanner />
       </View>
@@ -42,19 +44,19 @@ export default function ChatsScreen() {
               <View style={styles.brandRow}>
                 <MeshlineMark size={38} />
                 <View style={styles.brandCopy}>
-                  <Text style={styles.brand}>{identity.displayName}</Text>
-                  <Text style={styles.username}>{identity.username}</Text>
+                  <Text style={[styles.brand, { color: colors.text }]}>{identity.displayName}</Text>
+                  <Text style={[styles.username, { color: colors.muted }]}>{identity.username}</Text>
                 </View>
               </View>
               <Pressable onPress={() => router.push("/new-space")} style={({ pressed }) => [styles.compose, pressed && styles.pressed]} accessibilityLabel="Create a chat, group, or channel">
                 <MaterialIcons name="edit" size={20} color="#FFFFFF" />
               </Pressable>
             </View>
-            <View style={styles.searchWrap}>
-              <MaterialIcons name="search" size={20} color="#8B95A7" />
-              <TextInput value={query} onChangeText={setQuery} placeholder="Search chats" placeholderTextColor="#8B95A7" style={styles.search} returnKeyType="search" />
+            <View style={[styles.searchWrap, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+              <MaterialIcons name="search" size={20} color={colors.muted} />
+              <TextInput value={query} onChangeText={setQuery} placeholder="Search chats" placeholderTextColor={colors.muted} style={[styles.search, { color: colors.text }]} returnKeyType="search" />
             </View>
-            <Text style={styles.sectionLabel}>MESSAGES</Text>
+            <Text style={[styles.sectionLabel, { color: colors.muted }]}>MESSAGES</Text>
           </>
         }
         renderItem={({ item }) => {
@@ -67,19 +69,20 @@ export default function ChatsScreen() {
   );
 }
 
-function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; kind?: "direct" | "group" | "channel"; isGuide?: boolean; isPinned?: boolean }; latest?: Message; onPress: () => void }) {
+function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; kind?: "direct" | "group" | "channel"; isGuide?: boolean; isSavedMessages?: boolean; isPinned?: boolean }; latest?: Message; onPress: () => void }) {
+  const colors = useColors();
   const preview = latest?.body ?? "No messages yet";
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.conversation, pressed && styles.pressed]}>
-      {conversation.isGuide ? <View style={styles.guideAvatar}><MeshlineMark size={30} /></View> : conversation.kind === "group" ? <View style={styles.spaceAvatar}><MaterialIcons name="group" size={24} color={palette.indigo} /></View> : conversation.kind === "channel" ? <View style={styles.spaceAvatar}><MaterialIcons name="campaign" size={24} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={48} tone="emerald" />}
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.conversation, { borderBottomColor: colors.border }, pressed && styles.pressed]}>
+      {conversation.isSavedMessages ? <View style={styles.savedAvatar}><MaterialIcons name="bookmark" size={24} color="#FFFFFF" /></View> : conversation.isGuide ? <View style={styles.guideAvatar}><MeshlineMark size={30} /></View> : conversation.kind === "group" ? <View style={styles.spaceAvatar}><MaterialIcons name="group" size={24} color={palette.indigo} /></View> : conversation.kind === "channel" ? <View style={styles.spaceAvatar}><MaterialIcons name="campaign" size={24} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={48} tone="emerald" />}
       <View style={styles.conversationCopy}>
         <View style={styles.conversationTop}>
-          <Text numberOfLines={1} style={styles.conversationName}>{conversation.peerDisplayName}</Text>
+          <Text numberOfLines={1} style={[styles.conversationName, { color: colors.text }]}>{conversation.peerDisplayName}</Text>
           {conversation.isPinned ? <MaterialIcons name="push-pin" size={14} color={palette.indigo} /> : null}
-          <Text style={styles.conversationTime}>{formatConversationTime(conversation.updatedAt)}</Text>
+          <Text style={[styles.conversationTime, { color: colors.muted }]}>{formatConversationTime(conversation.updatedAt)}</Text>
         </View>
         <View style={styles.previewRow}>
-          {conversation.kind && conversation.kind !== "direct" ? <Text style={styles.spaceLabel}>{conversation.kind === "group" ? "GROUP" : "CHANNEL"}</Text> : null}<Text numberOfLines={1} style={styles.preview}>{preview}</Text>
+          {conversation.isSavedMessages ? <Text style={styles.spaceLabel}>PERSONAL</Text> : conversation.kind && conversation.kind !== "direct" ? <Text style={styles.spaceLabel}>{conversation.kind === "group" ? "GROUP" : "CHANNEL"}</Text> : null}<Text numberOfLines={1} style={[styles.preview, { color: colors.muted }]}>{preview}</Text>
           {latest?.direction === "outbound" ? <MaterialIcons name={latest.status === "delivered" ? "done-all" : "done"} size={16} color={latest.status === "delivered" ? palette.indigo : "#98A1B3"} /> : null}
         </View>
       </View>
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
   sectionLabel: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 22, marginBottom: 8, marginLeft: 4 },
   conversation: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, borderBottomColor: "#E9ECF4", borderBottomWidth: StyleSheet.hairlineWidth },
   guideAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
-  spaceAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
+  spaceAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" }, savedAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center" },
   conversationCopy: { flex: 1, gap: 5 },
   conversationTop: { flexDirection: "row", alignItems: "center", gap: 10 },
   conversationName: { flex: 1, color: palette.ink, fontSize: 16, lineHeight: 21, fontWeight: "700" },

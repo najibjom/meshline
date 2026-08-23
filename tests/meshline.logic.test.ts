@@ -25,6 +25,7 @@ vi.mock("react-native", () => ({ Platform: { OS: "web" } }));
 import {
   calculatePersonalBytes,
   emptyMeshlineState,
+  ensureSavedMessagesConversation,
   isLocalChannelOwner,
   isValidDisplayName,
   isValidUsername,
@@ -62,6 +63,19 @@ describe("Meshline local identity rules", () => {
   it("matches local login usernames without relying on a display name", () => {
     expect(matchesIdentityUsername("@alex_mesh", "Alex_Mesh")).toBe(true);
     expect(matchesIdentityUsername("@alex_mesh", "@other_user")).toBe(false);
+  });
+
+  it("creates one pinned local Saved Messages chat for an identity without treating it as a remote recipient", () => {
+    const state = ensureSavedMessagesConversation({
+      ...emptyMeshlineState,
+      identity: { displayName: "Alex", description: "", username: "@alex", deviceId: "device-1", createdAt: "2026-08-23T00:00:00.000Z", recoveryAcknowledged: true },
+    });
+    const saved = state.conversations.find((conversation) => conversation.isSavedMessages);
+    expect(saved?.peerDisplayName).toBe("Saved Messages");
+    expect(saved?.peerUsername).toBe("@alex");
+    expect(saved?.isPinned).toBe(true);
+    expect(state.messages[saved!.id][0].direction).toBe("system");
+    expect(ensureSavedMessagesConversation(state)).toBe(state);
   });
 
   it("keeps channel ownership bound to a device when a username changes", () => {

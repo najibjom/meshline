@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { PropsWithChildren, ReactNode } from "react";
 import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { useColors } from "@/hooks/use-colors";
 
 export const palette = {
   ink: "#182033",
@@ -49,20 +50,22 @@ export function StatusPill({ icon, children, variant = "neutral" }: PropsWithChi
 }
 
 export function SectionCard({ children, style }: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  const colors = useColors();
+  return <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, style]}>{children}</View>;
 }
 
 export function RowChevron({ icon, title, detail, onPress, tint = palette.indigo }: { icon: keyof typeof MaterialIcons.glyphMap; title: string; detail?: string; onPress: () => void; tint?: string }) {
+  const colors = useColors();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, { borderBottomColor: colors.border }, pressed && styles.pressed]}>
       <View style={[styles.rowIcon, { backgroundColor: `${tint}16` }]}>
         <MaterialIcons name={icon} size={19} color={tint} />
       </View>
       <View style={styles.rowCopy}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        {detail ? <Text style={styles.rowDetail}>{detail}</Text> : null}
+        <Text style={[styles.rowTitle, { color: colors.text }]}>{title}</Text>
+        {detail ? <Text style={[styles.rowDetail, { color: colors.muted }]}>{detail}</Text> : null}
       </View>
-      <MaterialIcons name="chevron-right" size={22} color="#A7AFC0" />
+      <MaterialIcons name="chevron-right" size={22} color={colors.muted} />
     </Pressable>
   );
 }

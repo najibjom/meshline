@@ -3,11 +3,17 @@ import { StatusBar } from "expo-status-bar";
 
 import { MeshlineProvider } from "@/lib/meshline-context";
 import { AppLockGate } from "@/components/app-lock-gate";
+import { ThemeProvider, useThemeContext } from "@/lib/theme-provider";
 
 export default function RootLayout() {
+  return <ThemeProvider><MeshlineRoot /></ThemeProvider>;
+}
+
+function MeshlineRoot() {
+  const { colorScheme } = useThemeContext();
   return (
     <MeshlineProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <AppLockGate>
         <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
           <Stack.Screen name="(tabs)" />

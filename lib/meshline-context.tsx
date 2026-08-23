@@ -15,6 +15,7 @@ import {
   ConversationKind,
   deleteLocalMeshlineAccount,
   emptyMeshlineState,
+  ensureSavedMessagesConversation,
   Identity,
   GroupPermissions,
   isValidDisplayName,
@@ -62,6 +63,7 @@ type MeshlineContextValue = {
   removeContact: (username: string) => Promise<void>;
   toggleConversationPin: (conversationId: string) => Promise<void>;
   sendMessage: (conversationId: string, text: string, replyTo?: ReplyReference) => Promise<void>;
+  saveMessage: (text: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   updateNetworkSettings: (settings: Partial<NetworkSettings>) => Promise<void>;
   updatePrivacySettings: (settings: Partial<PrivacySettings>) => Promise<void>;
@@ -156,7 +158,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   }, []);
 
   const createIdentity = useCallback(async (displayName: string, username: string, password: string) => {
-    const next = await makeIdentity(displayName, username, password);
+    const next = ensureSavedMessagesConversation(await makeIdentity(displayName, username, password));
     setState(next);
     setIsAuthenticated(true);
     await Promise.all([persistMeshlineState(next), persistLocalSession()]);
@@ -231,6 +233,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
 
   const startConversation = useCallback(async (usernameInput: string) => {
     const peerUsername = normalizeUsername(usernameInput);
+    if (state.identity && peerUsername === state.identity.username) return "saved-messages";
     const existing = state.conversations.find((conversation) => conversation.peerUsername === peerUsername);
     if (existing) return existing.id;
     const createdAt = new Date().toISOString();
@@ -355,7 +358,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     const message: Message = { id: Crypto.randomUUID(), conversationId, body, direction: "outbound", status: "sending", createdAt, replyTo };
     commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, updatedAt: createdAt } : conversation), messages: { ...current.messages, [conversationId]: [...(current.messages[conversationId] ?? []), message] } }));
     const conversation = state.conversations.find((candidate) => candidate.id === conversationId);
-    if (!conversation || conversation.kind) {
+    if (!conversation || conversation.kind || conversation.isSavedMessages) {
       setTimeout(() => commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) } })), 650);
       return;
     }
@@ -372,6 +375,23 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "failed", failureDetail } : candidate) } }));
     }
   }, [commit, state.conversations, state.identity]);
+
+  const saveMessage = useCallback(async (textInput: string) => {
+    const body = textInput.trim();
+    if (!body) return;
+    const createdAt = new Date().toISOString();
+    commit((current) => {
+      const withSavedMessages = ensureSavedMessagesConversation(current);
+      const savedConversation = withSavedMessages.conversations.find((conversation) => conversation.isSavedMessages);
+      if (!savedConversation) return withSavedMessages;
+      const message: Message = { id: Crypto.randomUUID(), conversationId: savedConversation.id, body, direction: "outbound", status: "delivered", createdAt };
+      return {
+        ...withSavedMessages,
+        conversations: withSavedMessages.conversations.map((conversation) => conversation.id === savedConversation.id ? { ...conversation, updatedAt: createdAt } : conversation),
+        messages: { ...withSavedMessages.messages, [savedConversation.id]: [...(withSavedMessages.messages[savedConversation.id] ?? []), message] },
+      };
+    });
+  }, [commit]);
 
   const deleteMessage = useCallback(async (conversationId: string, messageId: string) => {
     commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).filter((message) => message.id !== messageId) } }));
@@ -411,8 +431,8 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   }, [state.identity]);
 
   const value = useMemo<MeshlineContextValue>(() => ({
-    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, createSpace, updateChannelDetails, updateGroupDetails, updateSpaceMembers, updateGroupPermissions, saveContact, saveContactAndStartConversation, removeContact, toggleConversationPin, sendMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, createSpace, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, saveContactAndStartConversation, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateChannelDetails, updateDisplayName, updateGroupDetails, updateGroupPermissions, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateSpaceMembers, updateUsername]);
+    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, createSpace, updateChannelDetails, updateGroupDetails, updateSpaceMembers, updateGroupPermissions, saveContact, saveContactAndStartConversation, removeContact, toggleConversationPin, sendMessage, saveMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
+  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, createSpace, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, saveContactAndStartConversation, saveMessage, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateChannelDetails, updateDisplayName, updateGroupDetails, updateGroupPermissions, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateSpaceMembers, updateUsername]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }

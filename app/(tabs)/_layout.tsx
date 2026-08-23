@@ -4,19 +4,21 @@ import { Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { palette } from "@/components/meshline-ui";
+import { useColors } from "@/hooks/use-colors";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
   const height = 58 + bottomPadding;
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: palette.indigo,
-        tabBarInactiveTintColor: "#98A1B3",
+        tabBarActiveTintColor: colors.tint,
+        tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: styles.label,
-        tabBarStyle: [styles.tabBar, { height, paddingBottom: bottomPadding }],
+        tabBarStyle: [styles.tabBar, { height, paddingBottom: bottomPadding, backgroundColor: colors.surface, borderTopColor: colors.border }],
         sceneStyle: styles.scene,
       }}
       >

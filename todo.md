@@ -83,3 +83,5 @@
 - [x] Make the direct-message send control clearly visible on the installed Android interface.
 - [x] Diagnose and repair direct-message delivery failures that occur despite a reachable Meshline service.
 - [x] Publish the direct-message visibility and delivery-feedback repair to production-apk for runtime 1.0.7.
+- [x] Add a personal Saved Messages chat for local notes and text forwarded to self.
+- [x] Restore a clearly visible functional light/dark appearance switch.
