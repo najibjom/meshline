@@ -20,6 +20,7 @@
 - [x] Add a local contacts experience with saved people, username search, and conversation actions.
 - [x] Polish text messaging with reply, copy, delete-for-me, and pinned conversations.
 - [ ] Add unread indicators when real inbound transport events are available.
-- [ ] Add on-device privacy controls including biometric lock, local-data retention, export, and device logout.
+- [x] Add on-device privacy controls including biometric lock, local-data retention, export, and device logout.
+- [x] Add an editable profile description displayed below the name and @username.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.

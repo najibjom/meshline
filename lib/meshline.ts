@@ -8,6 +8,7 @@ export type MessageDirection = "outbound" | "inbound" | "system";
 
 export type Identity = {
   displayName: string;
+  description: string;
   username: string;
   deviceId: string;
   createdAt: string;
@@ -48,12 +49,18 @@ export type NetworkSettings = {
   mobileDataEnabled: boolean;
 };
 
+export type PrivacySettings = {
+  biometricLockEnabled: boolean;
+  retentionDays: 0 | 30 | 90;
+};
+
 export type MeshlineState = {
   identity: Identity | null;
   contacts: Contact[];
   conversations: Conversation[];
   messages: Record<string, Message[]>;
   networkSettings: NetworkSettings;
+  privacySettings: PrivacySettings;
 };
 
 const APP_STATE_KEY = "meshline.state.v1";
@@ -68,12 +75,18 @@ const defaultNetworkSettings: NetworkSettings = {
   mobileDataEnabled: false,
 };
 
+const defaultPrivacySettings: PrivacySettings = {
+  biometricLockEnabled: false,
+  retentionDays: 0,
+};
+
 export const emptyMeshlineState: MeshlineState = {
   identity: null,
   contacts: [],
   conversations: [],
   messages: {},
   networkSettings: defaultNetworkSettings,
+  privacySettings: defaultPrivacySettings,
 };
 
 const getWebStorage = () => {
@@ -109,6 +122,7 @@ export async function loadMeshlineState(): Promise<MeshlineState> {
       conversations: parsed.conversations ?? [],
       messages: parsed.messages ?? {},
       networkSettings: { ...defaultNetworkSettings, ...parsed.networkSettings },
+      privacySettings: { ...defaultPrivacySettings, ...parsed.privacySettings },
     };
   } catch {
     return emptyMeshlineState;
@@ -188,12 +202,22 @@ export async function makeIdentity(displayNameInput: string, usernameInput: stri
   };
 
   return {
-    identity: { displayName, username, deviceId, createdAt, recoveryAcknowledged: false },
+    identity: { displayName, description: "", username, deviceId, createdAt, recoveryAcknowledged: false },
     contacts: [],
     conversations: [guideConversation],
     messages: { [guideConversation.id]: [guideMessage] },
     networkSettings: defaultNetworkSettings,
+    privacySettings: defaultPrivacySettings,
   };
+}
+
+export function retainMessagesSince(messages: Record<string, Message[]>, retentionDays: number, now = Date.now()) {
+  if (retentionDays === 0) return messages;
+  const threshold = now - retentionDays * 24 * 60 * 60 * 1000;
+  return Object.fromEntries(Object.entries(messages).map(([conversationId, entries]) => [
+    conversationId,
+    entries.filter((message) => new Date(message.createdAt).getTime() >= threshold),
+  ]));
 }
 
 export async function verifyLocalIdentity(usernameInput: string, password: string) {

@@ -87,6 +87,12 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     [
+      "expo-local-authentication",
+      {
+        faceIDPermission: "Allow $(PRODUCT_NAME) to unlock your private Meshline identity with Face ID.",
+      },
+    ],
+    [
       "expo-secure-store",
       {
         configureAndroidBackup: true,

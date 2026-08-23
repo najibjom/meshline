@@ -24,6 +24,7 @@ import {
   isValidUsername,
   matchesIdentityUsername,
   normalizeUsername,
+  retainMessagesSince,
   storageLimitLabel,
 } from "../lib/meshline";
 
@@ -70,5 +71,16 @@ describe("Meshline transparent storage accounting", () => {
     expect(storageLimitLabel(500)).toBe("500 MB");
     expect(storageLimitLabel(1024)).toBe("1 GB");
     expect(storageLimitLabel(5120)).toBe("5 GB");
+  });
+
+  it("removes expired local messages when a retention limit is selected", () => {
+    const now = new Date("2026-08-23T00:00:00.000Z").getTime();
+    const result = retainMessagesSince({
+      chat: [
+        { id: "old", conversationId: "chat", body: "old", direction: "inbound", status: "local", createdAt: "2026-07-01T00:00:00.000Z" },
+        { id: "new", conversationId: "chat", body: "new", direction: "inbound", status: "local", createdAt: "2026-08-22T00:00:00.000Z" },
+      ],
+    }, 30, now);
+    expect(result.chat.map((message) => message.id)).toEqual(["new"]);
   });
 });

@@ -10,10 +10,12 @@ import { haptic } from "@/lib/haptics";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { identity, ready, updateDisplayName, validateDisplayName } = useMeshline();
+  const { identity, ready, updateDisplayName, updateProfileDescription, validateDisplayName } = useMeshline();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [nameError, setNameError] = useState("");
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState("");
   if (!ready || !identity) return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
   const shortId = identity.deviceId.slice(0, 8).toUpperCase();
   const startNameEdit = () => { setNameDraft(identity.displayName ?? identity.username.slice(1)); setNameError(""); setEditingName(true); };
@@ -23,6 +25,8 @@ export default function ProfileScreen() {
     haptic.success();
     setEditingName(false);
   };
+  const startDescriptionEdit = () => { setDescriptionDraft(identity.description ?? ""); setEditingDescription(true); };
+  const saveDescription = () => { void updateProfileDescription(descriptionDraft); haptic.success(); setEditingDescription(false); };
 
   return (
     <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
@@ -34,6 +38,7 @@ export default function ProfileScreen() {
             {editingName ? <View style={styles.nameEditRow}><TextInput value={nameDraft} onChangeText={(value) => { setNameDraft(value); setNameError(""); }} style={styles.nameInput} autoFocus returnKeyType="done" onSubmitEditing={saveName} /><Pressable onPress={saveName} style={({ pressed }) => [styles.nameSave, pressed && styles.pressed]}><MaterialIcons name="check" size={18} color="#FFFFFF" /></Pressable></View> : <View style={styles.displayNameRow}><Text style={styles.displayName}>{identity.displayName ?? identity.username.slice(1)}</Text><Pressable onPress={startNameEdit} hitSlop={8} style={({ pressed }) => [styles.editName, pressed && styles.pressed]}><MaterialIcons name="edit" size={15} color={palette.indigo} /></Pressable></View>}
             {nameError ? <Text style={styles.nameError}>{nameError}</Text> : null}
             <Text style={styles.username}>{identity.username}</Text>
+            {editingDescription ? <View style={styles.descriptionEdit}><TextInput value={descriptionDraft} onChangeText={setDescriptionDraft} placeholder="Write a description" placeholderTextColor="#9CA5B5" multiline maxLength={160} style={styles.descriptionInput} /><View style={styles.descriptionActions}><Pressable onPress={() => setEditingDescription(false)}><Text style={styles.descriptionCancel}>Cancel</Text></Pressable><Pressable onPress={saveDescription}><Text style={styles.descriptionSave}>Save</Text></Pressable></View></View> : <Pressable onPress={startDescriptionEdit} style={({ pressed }) => [styles.descriptionRow, pressed && styles.pressed]}><Text numberOfLines={2} style={[styles.description, !identity.description && styles.descriptionEmpty]}>{identity.description || "Add a description"}</Text><MaterialIcons name="edit" size={14} color={palette.indigo} /></Pressable>}
             <Text style={styles.device}>This device · {shortId}</Text>
             <StatusPill icon="verified-user" variant="success">Local identity created</StatusPill>
           </View>
@@ -42,6 +47,7 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>ACCOUNT CONTROL</Text>
         <SectionCard>
           <RowChevron icon="key" title="Recovery codes" detail="Keep a private fallback" onPress={() => router.push("/recovery")} tint={palette.indigo} />
+          <RowChevron icon="lock-outline" title="Privacy controls" detail="App lock, local retention, export, and logout" onPress={() => router.push("/privacy")} tint={palette.indigo} />
           <RowChevron icon="shield" title="Security & privacy" detail="What is protected in this build" onPress={() => router.push("/security")} tint={palette.emerald} />
           <View style={styles.identityNote}><MaterialIcons name="fingerprint" size={18} color={palette.muted} /><Text style={styles.identityNoteText}>Your raw key material and future blockchain address are intentionally hidden from the everyday experience.</Text></View>
         </SectionCard>
@@ -72,6 +78,14 @@ const styles = StyleSheet.create({
   nameSave: { width: 30, height: 30, borderRadius: 10, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center" },
   nameError: { color: palette.coral, fontSize: 11, lineHeight: 15, fontWeight: "700" },
   username: { color: palette.indigo, fontSize: 14, lineHeight: 19, fontWeight: "700" },
+  descriptionRow: { flexDirection: "row", alignItems: "flex-start", gap: 5, marginTop: 2 },
+  description: { flex: 1, color: palette.muted, fontSize: 12, lineHeight: 17 },
+  descriptionEmpty: { color: palette.indigo, fontWeight: "700" },
+  descriptionEdit: { marginTop: 4, borderRadius: 11, borderColor: palette.line, borderWidth: 1, backgroundColor: "#FFFFFF", padding: 7 },
+  descriptionInput: { minHeight: 37, maxHeight: 64, color: palette.ink, fontSize: 12, lineHeight: 17, paddingVertical: 0 },
+  descriptionActions: { flexDirection: "row", justifyContent: "flex-end", gap: 14, marginTop: 4 },
+  descriptionCancel: { color: palette.muted, fontSize: 12, lineHeight: 16, fontWeight: "700" },
+  descriptionSave: { color: palette.indigo, fontSize: 12, lineHeight: 16, fontWeight: "800" },
   device: { color: palette.muted, fontSize: 13, lineHeight: 17, marginBottom: 3 },
   sectionTitle: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginBottom: 8, marginLeft: 4 },
   identityNote: { flexDirection: "row", alignItems: "flex-start", gap: 9, padding: 16 },
