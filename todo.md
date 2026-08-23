@@ -67,4 +67,7 @@
 - [ ] Artifact-verify every visible App updates action in the released 1.0.6 APK before requesting any further installation.
 - [ ] Test the exact released Meshline APK in an Android-compatible runtime before requesting another user installation.
 - [ ] Complete fast artifact and component-level verification of the 1.0.6 update action path after the unaccelerated emulator test was stopped.
+- [x] Repair the missing App updates action control and prepare a package-verified test APK for device testing.
+- [x] Produce the final Meshline 1.0.7 base APK with a visible update action and an explicitly matched 1.0.7 OTA/service compatibility contract.
+- [ ] Generate the final 1.0.7 Android test APK from this verified base and confirm its exact packaged action labels.
 - [x] Push the current Meshline changes to the authorized GitHub repository and verify the remote branch.

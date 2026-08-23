@@ -41,7 +41,7 @@ async function startServer() {
   registerOpaqueRelayRoutes(app);
 
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, timestamp: Date.now() });
+    res.json({ ok: true, timestamp: Date.now(), clientReleaseCompatibility: "1.0.7" });
   });
 
   app.use(

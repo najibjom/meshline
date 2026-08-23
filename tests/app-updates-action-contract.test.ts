@@ -1,0 +1,22 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+
+const screenSource = readFileSync(resolve(process.cwd(), "app/app-updates.tsx"), "utf8");
+
+describe("Meshline 1.0.7 update action contract", () => {
+  it("keeps a direct, visible update action outside the status card", () => {
+    expect(screenSource).toContain('testID="meshline-update-action"');
+    expect(screenSource).toContain('accessibilityLabel={actionLabel}');
+    expect(screenSource).toContain('style={({ pressed }) => [styles.updateAction');
+    expect(screenSource).toContain('<Text style={styles.updateActionLabel}>{actionLabel}</Text>');
+    expect(screenSource.indexOf('testID="meshline-update-action"')).toBeGreaterThan(screenSource.indexOf('<SectionCard style={styles.statusCard}>'));
+  });
+
+  it("defines check, download, and restart states for the one visible action", () => {
+    expect(screenSource).toContain('"Check for updates"');
+    expect(screenSource).toContain('"Download update"');
+    expect(screenSource).toContain('"Restart to apply"');
+    expect(screenSource).toContain('const action = state === "available" ? download : state === "downloaded" ? apply : check;');
+  });
+});

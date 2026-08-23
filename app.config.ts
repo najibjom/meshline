@@ -41,7 +41,7 @@ const env = {
 const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
-  version: "1.0.6",
+  version: "1.0.7",
   runtimeVersion: {
     policy: "appVersion",
   },
