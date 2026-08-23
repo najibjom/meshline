@@ -36,6 +36,6 @@
 - [x] Restore and verify the inline profile @username pencil control.
 - [x] Add owner-editable group title, @username, and description settings.
 - [x] Fix saved contacts not appearing immediately in the Contacts list.
-- [ ] Push the latest validated Meshline changes to GitHub.
+- [x] Push the latest validated Meshline changes to GitHub.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.
