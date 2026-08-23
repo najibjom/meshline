@@ -7,6 +7,16 @@ export type DeliveryStatus = "sending" | "delivered" | "local";
 export type MessageDirection = "outbound" | "inbound" | "system";
 export type ConversationKind = "direct" | "group" | "channel";
 
+export type GroupPermissions = {
+  membersCanPost: boolean;
+  membersCanInvite: boolean;
+};
+
+export const defaultGroupPermissions: GroupPermissions = {
+  membersCanPost: true,
+  membersCanInvite: true,
+};
+
 export type Identity = {
   displayName: string;
   description: string;
@@ -25,6 +35,7 @@ export type Conversation = {
   kind?: ConversationKind;
   description?: string;
   memberUsernames?: string[];
+  groupPermissions?: GroupPermissions;
   createdBy?: string;
   createdByDeviceId?: string;
   isGuide?: boolean;
@@ -201,6 +212,10 @@ export function isLocalChannelOwner(conversation: Conversation, identity: Identi
 /** Groups use the same immutable local device owner model as channels. */
 export function isLocalGroupOwner(conversation: Conversation, identity: Identity | null) {
   return conversation.kind === "group" && Boolean(identity) && (!conversation.createdByDeviceId || conversation.createdByDeviceId === identity?.deviceId);
+}
+
+export function resolveGroupPermissions(conversation: Conversation): GroupPermissions {
+  return { ...defaultGroupPermissions, ...conversation.groupPermissions };
 }
 
 export function matchesIdentityUsername(storedUsername: string, usernameInput: string) {

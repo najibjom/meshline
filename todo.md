@@ -37,5 +37,8 @@
 - [x] Add owner-editable group title, @username, and description settings.
 - [x] Fix saved contacts not appearing immediately in the Contacts list.
 - [x] Push the latest validated Meshline changes to GitHub.
-- [ ] Produce a validated design for an audited encrypted two-device transport foundation.
-- [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.
+- [x] Add text-only owner controls for group members, channel subscribers, and basic posting permissions.
+- [x] Define an encrypted two-device transport foundation without claiming active encrypted delivery.
+- [x] Define decentralized name resolution and relay architecture after the encrypted transport model.
+- [x] Produce a validated design for an audited encrypted two-device transport foundation.
+- [x] Produce a decentralized username-resolution and encrypted relay architecture specification.
