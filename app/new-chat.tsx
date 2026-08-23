@@ -11,7 +11,7 @@ import { haptic } from "@/lib/haptics";
 
 export default function NewChatScreen() {
   const router = useRouter();
-  const { saveContact, startConversation, validateUsername } = useMeshline();
+  const { saveContactAndStartConversation, validateUsername } = useMeshline();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
@@ -26,8 +26,7 @@ export default function NewChatScreen() {
     }
     setError("");
     setCreating(true);
-    await saveContact(displayName, username);
-    const conversationId = await startConversation(username);
+    const conversationId = await saveContactAndStartConversation(displayName, username);
     haptic.light();
     router.replace({ pathname: "/chat/[id]", params: { id: conversationId } });
   };

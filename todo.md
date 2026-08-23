@@ -35,5 +35,6 @@
 - [x] Add owner-editable channel title, @username, and description settings.
 - [x] Restore and verify the inline profile @username pencil control.
 - [x] Add owner-editable group title, @username, and description settings.
+- [x] Fix saved contacts not appearing immediately in the Contacts list.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.
