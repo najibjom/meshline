@@ -68,3 +68,4 @@
 - [x] Restore a prominent, persistent App updates entry in the Network tab.
 - [x] Correct the App updates “Ready to check” label when the installation is already current, and deliver the connection banner through the compatible release path.
 - [x] Keep the Meshline connection indicator permanently visible at the top of the Chats page across compatible builds.
+- [ ] Add a persistent light/dark theme switch in settings and repair contrast across sign-in, messaging, and primary action controls.
