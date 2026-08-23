@@ -41,11 +41,11 @@ type MeshlineContextValue = {
   createIdentity: (displayName: string, username: string, password: string) => Promise<void>;
   loginIdentity: (username: string, password: string) => Promise<boolean>;
   updateDisplayName: (displayName: string) => Promise<void>;
-  updateUsername: (username: string, password: string) => Promise<boolean>;
+  updateUsername: (username: string) => Promise<boolean>;
   updateProfileDescription: (description: string) => Promise<void>;
   acknowledgeRecovery: () => Promise<void>;
   startConversation: (username: string) => Promise<string>;
-  createSpace: (kind: "group" | "channel", title: string, description: string, memberUsernames: string[]) => Promise<string>;
+  createSpace: (kind: "group" | "channel", title: string, username: string, description: string, memberUsernames: string[]) => Promise<string>;
   saveContact: (displayName: string, username: string) => Promise<void>;
   removeContact: (username: string) => Promise<void>;
   toggleConversationPin: (conversationId: string) => Promise<void>;
@@ -120,10 +120,10 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, displayName: normalized } : null }));
   }, [commit]);
 
-  const updateUsername = useCallback(async (usernameInput: string, password: string) => {
+  const updateUsername = useCallback(async (usernameInput: string) => {
     const nextUsername = normalizeUsername(usernameInput);
     if (!state.identity || !isValidUsername(nextUsername)) return false;
-    const changed = await changeLocalUsername(state.identity.username, nextUsername, password);
+    const changed = await changeLocalUsername(nextUsername);
     if (!changed) return false;
     commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, username: nextUsername } : null }));
     return true;
@@ -159,16 +159,18 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     return conversation.id;
   }, [state]);
 
-  const createSpace = useCallback(async (kind: "group" | "channel", titleInput: string, descriptionInput: string, memberUsernames: string[]) => {
+  const createSpace = useCallback(async (kind: "group" | "channel", titleInput: string, usernameInput: string, descriptionInput: string, memberUsernames: string[]) => {
     if (!state.identity) throw new Error("A local identity is required to create a space.");
     const title = titleInput.trim().slice(0, 60);
+    const username = normalizeUsername(usernameInput);
+    if (!isValidUsername(username) || state.conversations.some((conversation) => conversation.peerUsername === username)) throw new Error("Choose an unused, valid @username for this space.");
     const description = descriptionInput.trim().slice(0, 180);
     const createdAt = new Date().toISOString();
     const id = Crypto.randomUUID();
     const members = Array.from(new Set([state.identity.username, ...memberUsernames]));
     const conversation: Conversation = {
       id,
-      peerUsername: `@${kind}_${id.replace(/-/g, "").slice(0, 10)}`,
+      peerUsername: username,
       peerDisplayName: title,
       createdAt,
       updatedAt: createdAt,

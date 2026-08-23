@@ -72,6 +72,7 @@ const APP_STATE_KEY = "meshline.state.v1";
 const RECOVERY_CODES_KEY = "meshline.recovery-codes.v1";
 const IDENTITY_MARKER_KEY = "meshline.identity-marker.v1";
 const PASSWORD_VERIFIER_KEY = "meshline.password-verifier.v1";
+const PASSWORD_USERNAME_KEY = "meshline.password-username.v1";
 const AUTH_SESSION_KEY = "meshline.auth-session.v1";
 
 const defaultNetworkSettings: NetworkSettings = {
@@ -135,13 +136,8 @@ export async function clearLocalSession() {
   await secureValueStore.set(AUTH_SESSION_KEY, "");
 }
 
-export async function changeLocalUsername(currentUsernameInput: string, nextUsernameInput: string, password: string) {
-  const [deviceMarker, storedVerifier] = await Promise.all([secureValueStore.get(IDENTITY_MARKER_KEY), secureValueStore.get(PASSWORD_VERIFIER_KEY)]);
-  if (!deviceMarker || !storedVerifier) return false;
-  const currentVerifier = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, `${deviceMarker}:${normalizeUsername(currentUsernameInput)}:${password}`);
-  if (currentVerifier !== storedVerifier) return false;
-  const nextVerifier = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, `${deviceMarker}:${normalizeUsername(nextUsernameInput)}:${password}`);
-  await secureValueStore.set(PASSWORD_VERIFIER_KEY, nextVerifier);
+export async function changeLocalUsername(nextUsernameInput: string) {
+  await secureValueStore.set(PASSWORD_USERNAME_KEY, normalizeUsername(nextUsernameInput));
   return true;
 }
 
@@ -225,6 +221,7 @@ export async function makeIdentity(displayNameInput: string, usernameInput: stri
   await Promise.all([
     secureValueStore.set(IDENTITY_MARKER_KEY, deviceMarker),
     secureValueStore.set(PASSWORD_VERIFIER_KEY, passwordVerifier),
+    secureValueStore.set(PASSWORD_USERNAME_KEY, username),
     secureValueStore.set(RECOVERY_CODES_KEY, JSON.stringify(recoveryCodes)),
   ]);
 
@@ -266,15 +263,16 @@ export function retainMessagesSince(messages: Record<string, Message[]>, retenti
 }
 
 export async function verifyLocalIdentity(usernameInput: string, password: string) {
-  const [deviceMarker, storedVerifier] = await Promise.all([
+  const [deviceMarker, storedVerifier, verifierUsername] = await Promise.all([
     secureValueStore.get(IDENTITY_MARKER_KEY),
     secureValueStore.get(PASSWORD_VERIFIER_KEY),
+    secureValueStore.get(PASSWORD_USERNAME_KEY),
   ]);
   if (!deviceMarker || !storedVerifier) return false;
 
   const candidate = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA512,
-    `${deviceMarker}:${normalizeUsername(usernameInput)}:${password}`,
+    `${deviceMarker}:${verifierUsername ?? normalizeUsername(usernameInput)}:${password}`,
   );
   return candidate === storedVerifier;
 }

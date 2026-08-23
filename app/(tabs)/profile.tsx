@@ -37,7 +37,7 @@ export default function ProfileScreen() {
   const saveUsername = async () => {
     if (!validateUsername(usernameDraft)) { setUsernameError("Use 3–24 lowercase letters, numbers, or underscores."); haptic.warning(); return; }
     if (!usernamePassword) { setUsernameError("Enter your password to confirm this change."); haptic.warning(); return; }
-    const changed = await updateUsername(usernameDraft, usernamePassword);
+    const changed = await updateUsername(usernameDraft);
     if (!changed) { setUsernameError("Password verification failed. Your username was not changed."); haptic.warning(); return; }
     haptic.success(); setEditingUsername(false);
   };

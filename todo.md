@@ -29,5 +29,7 @@
 - [x] Add a clearly confirmed Profile account-deletion flow that removes all local Meshline data.
 - [x] Add local-first group chat creation with member selection and group messaging.
 - [x] Add local-first channel creation with admin-only posting rules and subscriber viewing.
+- [x] Move local username editing into the Profile identity card and remove the password prompt.
+- [x] Add user-defined @usernames to local group chats and channels.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.
