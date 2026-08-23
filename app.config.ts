@@ -41,12 +41,15 @@ const env = {
 const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
-  version: "1.0.0",
+  version: "1.0.2",
   runtimeVersion: {
     policy: "appVersion",
   },
   updates: {
     url: "https://u.expo.dev/a2b75432-bb1d-49ce-825d-3aa7de794ca5",
+    requestHeaders: {
+      "expo-channel-name": "production-apk",
+    },
     checkAutomatically: "NEVER",
     fallbackToCacheTimeout: 0,
   },
