@@ -85,3 +85,4 @@
 - [x] Publish the direct-message visibility and delivery-feedback repair to production-apk for runtime 1.0.7.
 - [x] Add a personal Saved Messages chat for local notes and text forwarded to self.
 - [x] Restore a clearly visible functional light/dark appearance switch.
+- [x] Publish Saved Messages and the visible light/dark appearance switch to production-apk for runtime 1.0.7.
