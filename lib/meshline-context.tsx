@@ -4,7 +4,8 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { AppState, Platform } from "react-native";
 
 import { acknowledgeRelayEnvelope, enqueueOpaqueEnvelope, lookupRelayDevice, readRelayInbox, registerRelayDevice } from "@/lib/relay-client";
-import { decryptTextFromDevice, encryptTextForDevice, getOrCreateTransportDeviceKey } from "@/lib/transport";
+import { decodeSpaceRelayPayload, encodeSpaceRelayPayload } from "@/lib/space-relay-payload";
+import { decryptTextFromDevice, encryptTextForDevice, getOrCreateTransportDeviceKey, transportFingerprint } from "@/lib/transport";
 import { describeRelayDeliveryFailure } from "@/lib/delivery-status";
 
 import {
@@ -31,6 +32,7 @@ import {
   NetworkSettings,
   normalizeDisplayName,
   normalizeUsername,
+  observeTransportKey,
   persistMeshlineState,
   persistLocalSession,
   PrivacySettings,
@@ -121,19 +123,36 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
           try {
             const body = decryptTextFromDevice(envelope, transportKey.secretKey, envelope.senderPublicKey);
             const createdAt = envelope.createdAt;
+            const spacePayload = decodeSpaceRelayPayload(body);
+            if (spacePayload && !(spacePayload.space.memberUsernames ?? []).includes(identity.username)) throw new Error("Received a space envelope for a device outside its member list.");
             setState((current) => {
               const alreadyStored = Object.values(current.messages).flat().some((message) => message.transportEnvelopeId === envelope.id);
               if (alreadyStored) {
                 void acknowledgeRelayEnvelope(identity.username, envelope.id).catch((error) => console.warn("[Meshline relay proof] acknowledgement retry failed", error));
                 return current;
               }
-              const existingConversation = current.conversations.find((conversation) => conversation.peerUsername === envelope.senderUsername);
-              const conversation = existingConversation ?? { id: Crypto.randomUUID(), peerUsername: envelope.senderUsername, peerDisplayName: envelope.senderUsername.slice(1), createdAt, updatedAt: createdAt };
-              const message: Message = { id: Crypto.randomUUID(), conversationId: conversation.id, body, direction: "inbound", status: "delivered", createdAt, transportEnvelopeId: envelope.id };
+              const observed = observeTransportKey(current, envelope.senderUsername, envelope.senderPublicKey, transportFingerprint(envelope.senderPublicKey), createdAt);
+              const existingConversation = spacePayload
+                ? observed.state.conversations.find((conversation) => conversation.id === spacePayload.space.id)
+                : observed.state.conversations.find((conversation) => conversation.peerUsername === envelope.senderUsername);
+              const conversation = existingConversation ?? (spacePayload
+                ? { ...spacePayload.space, createdAt, updatedAt: createdAt }
+                : { id: Crypto.randomUUID(), peerUsername: envelope.senderUsername, peerDisplayName: envelope.senderUsername.slice(1), createdAt, updatedAt: createdAt });
+              const message: Message = spacePayload
+                ? { id: spacePayload.message.id, conversationId: conversation.id, body: spacePayload.message.body, replyTo: spacePayload.message.replyTo, direction: "inbound", senderUsername: envelope.senderUsername, status: "delivered", createdAt: spacePayload.message.createdAt, transportEnvelopeId: envelope.id }
+                : { id: Crypto.randomUUID(), conversationId: conversation.id, body, direction: "inbound", senderUsername: envelope.senderUsername, status: "delivered", createdAt, transportEnvelopeId: envelope.id };
+              const keyNotice: Message | null = observed.keyChanged ? {
+                id: Crypto.randomUUID(),
+                conversationId: conversation.id,
+                body: "Security notice: this contact’s transport key changed. Compare the new fingerprint outside Meshline before sharing sensitive content. This experimental relay cannot verify identity automatically.",
+                direction: "system",
+                status: "local",
+                createdAt,
+              } : null;
               const next: MeshlineState = {
-                ...current,
-                conversations: existingConversation ? current.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, updatedAt: createdAt } : candidate) : [conversation, ...current.conversations],
-                messages: { ...current.messages, [conversation.id]: [...(current.messages[conversation.id] ?? []), message] },
+                ...observed.state,
+                conversations: existingConversation ? observed.state.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, ...(spacePayload?.space ?? {}), updatedAt: createdAt } : candidate) : [conversation, ...observed.state.conversations],
+                messages: { ...observed.state.messages, [conversation.id]: [...(observed.state.messages[conversation.id] ?? []), message, ...(keyNotice ? [keyNotice] : [])] },
               };
               void persistMeshlineState(next)
                 .then(() => acknowledgeRelayEnvelope(identity.username, envelope.id))
@@ -277,7 +296,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     const message: Message = {
       id: Crypto.randomUUID(),
       conversationId: id,
-      body: `${title} was created locally as a ${noun}. ${kind === "channel" ? "Only the local owner can post in this channel." : "Members are ready for text discussion."} Encrypted group transport is a future protocol milestone.`,
+      body: `${title} was created as a ${noun}. ${kind === "channel" ? "Only the owner can post in this channel." : "Members are ready for text discussion."} When registered members are included, new text is sent through experimental per-member encrypted relay copies.`,
       direction: "system",
       status: "local",
       createdAt,
@@ -363,14 +382,47 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     const message: Message = { id: Crypto.randomUUID(), conversationId, body, direction: "outbound", status: "sending", createdAt, replyTo };
     commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, updatedAt: createdAt } : conversation), messages: { ...current.messages, [conversationId]: [...(current.messages[conversationId] ?? []), message] } }));
     const conversation = state.conversations.find((candidate) => candidate.id === conversationId);
-    if (!conversation || conversation.kind || conversation.isSavedMessages) {
+    if (!conversation || conversation.isSavedMessages) {
       setTimeout(() => commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) } })), 650);
       return;
     }
 
     try {
       if (!state.identity) throw new Error("A local identity is required for encrypted relay transport.");
+      if (conversation.kind) {
+        const recipients = (conversation.memberUsernames ?? []).filter((username) => username !== state.identity?.username);
+        if (!recipients.length) {
+          commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) } }));
+          return;
+        }
+        const transportKey = await getOrCreateTransportDeviceKey();
+        const wirePayload = encodeSpaceRelayPayload(conversation, message);
+        const results = await Promise.allSettled(recipients.map(async (recipientUsername) => {
+          const recipient = await lookupRelayDevice(recipientUsername);
+          const encrypted = encryptTextForDevice(wirePayload, transportKey.secretKey, recipient.publicKey);
+          return enqueueOpaqueEnvelope({ recipientUsername, senderUsername: state.identity!.username, senderPublicKey: transportKey.publicKey, ...encrypted });
+        }));
+        const accepted = results.filter((result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof enqueueOpaqueEnvelope>>> => result.status === "fulfilled").map((result) => result.value.id);
+        if (!accepted.length) throw new Error("No space members currently have a registered Meshline device.");
+        const failureDetail = accepted.length === recipients.length ? undefined : `Queued for ${accepted.length} of ${recipients.length} registered members.`;
+        commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "queued", transportEnvelopeIds: accepted, failureDetail } : candidate) } }));
+        return;
+      }
       const [transportKey, recipient] = await Promise.all([getOrCreateTransportDeviceKey(), lookupRelayDevice(conversation.peerUsername)]);
+      const observedAt = new Date().toISOString();
+      commit((current) => {
+        const observed = observeTransportKey(current, conversation.peerUsername, recipient.publicKey, transportFingerprint(recipient.publicKey), observedAt);
+        if (!observed.keyChanged) return observed.state;
+        const notice: Message = {
+          id: Crypto.randomUUID(),
+          conversationId,
+          body: "Security notice: this contact’s transport key changed. Compare the new fingerprint outside Meshline before sharing sensitive content. This experimental relay cannot verify identity automatically.",
+          direction: "system",
+          status: "local",
+          createdAt: observedAt,
+        };
+        return { ...observed.state, messages: { ...observed.state.messages, [conversationId]: [...(observed.state.messages[conversationId] ?? []), notice] } };
+      });
       const encrypted = encryptTextForDevice(body, transportKey.secretKey, recipient.publicKey);
       const envelope = await enqueueOpaqueEnvelope({ recipientUsername: conversation.peerUsername, senderUsername: state.identity.username, senderPublicKey: transportKey.publicKey, ...encrypted });
       commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "queued", transportEnvelopeId: envelope.id } : candidate) } }));

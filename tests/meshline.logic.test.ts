@@ -31,6 +31,7 @@ import {
   isValidUsername,
   matchesIdentityUsername,
   normalizeUsername,
+  observeTransportKey,
   resolveGroupPermissions,
   retainMessagesSince,
   storageLimitLabel,
@@ -41,6 +42,16 @@ import { decryptTextFromDevice, encryptTextForDevice } from "../lib/transport";
 import { classifyMeshlineConnection, describeMeshlineConnection } from "../lib/connection-status";
 
 describe("Meshline local identity rules", () => {
+  it("records a contact transport key and flags a changed key for verification", () => {
+    const first = observeTransportKey(emptyMeshlineState, "@noway", "first-public-key", "AAAA BBBB", "2026-08-24T00:00:00.000Z");
+    expect(first.keyChanged).toBe(false);
+    expect(first.state.transportTrust["@noway"]?.fingerprint).toBe("AAAA BBBB");
+
+    const changed = observeTransportKey(first.state, "@noway", "replacement-public-key", "CCCC DDDD", "2026-08-24T01:00:00.000Z");
+    expect(changed.keyChanged).toBe(true);
+    expect(changed.state.transportTrust["@noway"]?.keyChangedAt).toBe("2026-08-24T01:00:00.000Z");
+  });
+
   it("keeps display names separate from unique usernames", () => {
     expect(isValidDisplayName("Alex Johnson")).toBe(true);
     expect(isValidDisplayName("A")).toBe(false);

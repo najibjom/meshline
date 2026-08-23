@@ -50,15 +50,26 @@ export type Contact = {
   createdAt: string;
 };
 
+export type TransportTrustRecord = {
+  username: string;
+  publicKey: string;
+  fingerprint: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  keyChangedAt?: string;
+};
+
 export type Message = {
   id: string;
   conversationId: string;
   body: string;
   direction: MessageDirection;
+  senderUsername?: string;
   status: DeliveryStatus;
   createdAt: string;
   replyTo?: { id: string; body: string };
   transportEnvelopeId?: string;
+  transportEnvelopeIds?: string[];
   failureDetail?: string;
 };
 
@@ -77,6 +88,7 @@ export type PrivacySettings = {
 export type MeshlineState = {
   identity: Identity | null;
   contacts: Contact[];
+  transportTrust: Record<string, TransportTrustRecord>;
   conversations: Conversation[];
   messages: Record<string, Message[]>;
   networkSettings: NetworkSettings;
@@ -105,6 +117,7 @@ const defaultPrivacySettings: PrivacySettings = {
 export const emptyMeshlineState: MeshlineState = {
   identity: null,
   contacts: [],
+  transportTrust: {},
   conversations: [],
   messages: {},
   networkSettings: defaultNetworkSettings,
@@ -200,6 +213,7 @@ export async function loadMeshlineState(): Promise<MeshlineState> {
     const loaded: MeshlineState = {
       identity: parsed.identity ?? null,
       contacts: parsed.contacts ?? [],
+      transportTrust: parsed.transportTrust ?? {},
       conversations: parsed.conversations ?? [],
       messages: parsed.messages ?? {},
       networkSettings: { ...defaultNetworkSettings, ...parsed.networkSettings },
@@ -247,6 +261,23 @@ export function isLocalGroupOwner(conversation: Conversation, identity: Identity
 
 export function resolveGroupPermissions(conversation: Conversation): GroupPermissions {
   return { ...defaultGroupPermissions, ...conversation.groupPermissions };
+}
+
+/** Records an observed contact transport key. A changed key remains visible for later user verification. */
+export function observeTransportKey(state: MeshlineState, username: string, publicKey: string, fingerprint: string, observedAt: string) {
+  const previous = state.transportTrust[username];
+  const keyChanged = Boolean(previous && previous.publicKey !== publicKey);
+  const record: TransportTrustRecord = previous && !keyChanged
+    ? { ...previous, lastSeenAt: observedAt }
+    : {
+      username,
+      publicKey,
+      fingerprint,
+      firstSeenAt: previous?.firstSeenAt ?? observedAt,
+      lastSeenAt: observedAt,
+      keyChangedAt: keyChanged ? observedAt : previous?.keyChangedAt,
+    };
+  return { keyChanged, state: { ...state, transportTrust: { ...state.transportTrust, [username]: record } } };
 }
 
 export function matchesIdentityUsername(storedUsername: string, usernameInput: string) {
@@ -303,6 +334,7 @@ export async function makeIdentity(displayNameInput: string, usernameInput: stri
   return {
     identity: { displayName, description: "", username, deviceId, createdAt, recoveryAcknowledged: false },
     contacts: [],
+    transportTrust: {},
     conversations: [guideConversation],
     messages: { [guideConversation.id]: [guideMessage] },
     networkSettings: defaultNetworkSettings,
