@@ -137,4 +137,11 @@ describe("Meshline transparent storage accounting", () => {
     expect(classifyMeshlineConnection(true, false)).toBe("service-unavailable");
     expect(describeMeshlineConnection("service-unavailable").detail).toContain("internet is working");
   });
+
+  it("does not call a device connected until its relay key registration succeeds", () => {
+    expect(classifyMeshlineConnection(true, true, null)).toBe("connecting");
+    expect(classifyMeshlineConnection(true, true, false)).toBe("device-registration-unavailable");
+    expect(classifyMeshlineConnection(true, true, true)).toBe("connected");
+    expect(describeMeshlineConnection("connected").detail).toContain("direct chats");
+  });
 });

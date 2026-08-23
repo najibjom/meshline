@@ -7,30 +7,50 @@ import { palette } from "@/components/meshline-ui";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { classifyMeshlineConnection, describeMeshlineConnection } from "@/lib/connection-status";
 import { haptic } from "@/lib/haptics";
+import { useMeshline } from "@/lib/meshline-context";
+import { registerRelayDevice } from "@/lib/relay-client";
+import { getOrCreateTransportDeviceKey } from "@/lib/transport";
 
 export function MeshlineConnectionBanner() {
+  const { identity, isAuthenticated } = useMeshline();
   const network = Network.useNetworkState();
   const [serviceReachable, setServiceReachable] = useState<boolean | null>(null);
+  const [relayDeviceReady, setRelayDeviceReady] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
   const internetReachable = network.isInternetReachable;
 
   const probe = useCallback(async () => {
     if (internetReachable === false) {
       setServiceReachable(null);
+      setRelayDeviceReady(null);
       return;
     }
     setChecking(true);
     setServiceReachable(null);
+    setRelayDeviceReady(null);
     try {
       const baseUrl = getApiBaseUrl().replace(/\/$/, "");
       const response = await fetch(`${baseUrl}/api/health`, { method: "GET", headers: { Accept: "application/json" } });
       setServiceReachable(response.ok);
+      if (!response.ok) return;
+      if (!isAuthenticated || !identity) {
+        setRelayDeviceReady(true);
+        return;
+      }
+      try {
+        const transportKey = await getOrCreateTransportDeviceKey();
+        await registerRelayDevice(identity.username, transportKey.publicKey);
+        setRelayDeviceReady(true);
+      } catch {
+        setRelayDeviceReady(false);
+      }
     } catch {
       setServiceReachable(false);
+      setRelayDeviceReady(null);
     } finally {
       setChecking(false);
     }
-  }, [internetReachable]);
+  }, [identity?.username, internetReachable, isAuthenticated]);
 
   useEffect(() => {
     void probe();
@@ -38,10 +58,11 @@ export function MeshlineConnectionBanner() {
     return () => clearInterval(interval);
   }, [probe]);
 
-  const kind = useMemo(() => classifyMeshlineConnection(internetReachable, serviceReachable), [internetReachable, serviceReachable]);
+  const kind = useMemo(() => classifyMeshlineConnection(internetReachable, serviceReachable, relayDeviceReady), [internetReachable, relayDeviceReady, serviceReachable]);
   const presentation = describeMeshlineConnection(kind);
-  const tone = kind === "connected" ? styles.connected : kind === "offline" || kind === "service-unavailable" ? styles.problem : styles.connecting;
-  const iconColor = kind === "connected" ? palette.emerald : kind === "offline" || kind === "service-unavailable" ? palette.coral : palette.indigo;
+  const isProblem = kind === "offline" || kind === "service-unavailable" || kind === "device-registration-unavailable";
+  const tone = kind === "connected" ? styles.connected : isProblem ? styles.problem : styles.connecting;
+  const iconColor = kind === "connected" ? palette.emerald : isProblem ? palette.coral : palette.indigo;
 
   return (
     <TouchableOpacity activeOpacity={0.78} onPress={() => { haptic.light(); void probe(); }} style={[styles.banner, tone]} accessibilityRole="button" accessibilityLabel={`${presentation.label}. ${presentation.detail}. Tap to retry.`}>

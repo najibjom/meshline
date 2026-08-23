@@ -88,3 +88,5 @@
 - [x] Publish Saved Messages and the visible light/dark appearance switch to production-apk for runtime 1.0.7.
 - [x] Diagnose and resolve Meshline startup crashes on a Windows Pixel Android emulator used as the second test device.
 - [x] Build and verify a separate x86_64-compatible Meshline APK for the Windows Pixel emulator without changing the phone release path.
+- [x] Fix relay device registration so two connected installed Meshline clients can discover one another by username.
+- [ ] Publish relay-readiness diagnostics to production-apk for the installed 1.0.7 phone and emulator runtimes.
