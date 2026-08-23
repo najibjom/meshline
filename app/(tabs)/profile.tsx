@@ -10,12 +10,13 @@ import { haptic } from "@/lib/haptics";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { identity, ready, updateDisplayName, updateProfileDescription, validateDisplayName } = useMeshline();
+  const { identity, logout, ready, updateDisplayName, updateProfileDescription, validateDisplayName } = useMeshline();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [nameError, setNameError] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState("");
+  const [confirmLogout, setConfirmLogout] = useState(false);
   if (!ready || !identity) return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
   const shortId = identity.deviceId.slice(0, 8).toUpperCase();
   const startNameEdit = () => { setNameDraft(identity.displayName ?? identity.username.slice(1)); setNameError(""); setEditingName(true); };
@@ -58,6 +59,11 @@ export default function ProfileScreen() {
           <Text style={styles.usernameCaption}>Your display name is shown above. A decentralized name registry will resolve your @username when the protocol layer is added.</Text>
         </SectionCard>
 
+        <Text style={styles.sectionTitle}>SESSION</Text>
+        <SectionCard style={styles.logoutCard}>
+          {confirmLogout ? <View style={styles.logoutConfirm}><Text style={styles.logoutConfirmTitle}>Log out of Meshline?</Text><Text style={styles.logoutConfirmText}>Your local identity, contacts, and messages stay on this device. You will need your @username and password to return.</Text><View style={styles.logoutActions}><Pressable onPress={() => setConfirmLogout(false)} style={({ pressed }) => [styles.logoutCancel, pressed && styles.pressed]}><Text style={styles.logoutCancelText}>Cancel</Text></Pressable><Pressable onPress={() => { logout(); haptic.light(); router.replace("/welcome"); }} style={({ pressed }) => [styles.logoutConfirmButton, pressed && styles.pressed]}><Text style={styles.logoutConfirmButtonText}>Log out</Text></Pressable></View></View> : <Pressable onPress={() => setConfirmLogout(true)} style={({ pressed }) => [styles.logoutRow, pressed && styles.pressed]}><View style={styles.logoutIcon}><MaterialIcons name="logout" size={20} color={palette.coral} /></View><View style={styles.logoutCopy}><Text style={styles.logoutTitle}>Log out</Text><Text style={styles.logoutText}>End this session without deleting local data</Text></View><MaterialIcons name="chevron-right" size={21} color="#A0A9B9" /></Pressable>}
+        </SectionCard>
+
         <View style={styles.footer}><MaterialIcons name="info-outline" size={17} color="#8B95A7" /><Text style={styles.footerText}>Meshline does not ask for your phone number, email address, wallet, or public key.</Text></View>
       </ScrollView>
     </ScreenContainer>
@@ -96,6 +102,20 @@ const styles = StyleSheet.create({
   usernameCardValue: { color: palette.ink, fontSize: 18, lineHeight: 24, fontWeight: "800", marginTop: 2 },
   shareButton: { height: 40, width: 40, borderRadius: 14, justifyContent: "center", alignItems: "center", backgroundColor: palette.indigoSoft },
   usernameCaption: { color: palette.muted, fontSize: 13, lineHeight: 18, marginTop: 12 },
+  logoutCard: { overflow: "hidden" },
+  logoutRow: { minHeight: 70, flexDirection: "row", alignItems: "center", gap: 11, padding: 16 },
+  logoutIcon: { width: 39, height: 39, borderRadius: 13, backgroundColor: "#FFF0F2", alignItems: "center", justifyContent: "center" },
+  logoutCopy: { flex: 1 },
+  logoutTitle: { color: palette.coral, fontSize: 15, lineHeight: 20, fontWeight: "800" },
+  logoutText: { color: palette.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  logoutConfirm: { padding: 16 },
+  logoutConfirmTitle: { color: palette.ink, fontSize: 16, lineHeight: 21, fontWeight: "800" },
+  logoutConfirmText: { color: palette.muted, fontSize: 13, lineHeight: 18, marginTop: 4 },
+  logoutActions: { flexDirection: "row", gap: 9, marginTop: 14 },
+  logoutCancel: { flex: 1, height: 42, borderRadius: 13, backgroundColor: "#EEF1F6", alignItems: "center", justifyContent: "center" },
+  logoutCancelText: { color: palette.ink, fontSize: 14, lineHeight: 19, fontWeight: "800" },
+  logoutConfirmButton: { flex: 1, height: 42, borderRadius: 13, backgroundColor: palette.coral, alignItems: "center", justifyContent: "center" },
+  logoutConfirmButtonText: { color: "#FFFFFF", fontSize: 14, lineHeight: 19, fontWeight: "800" },
   footer: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingHorizontal: 5, marginTop: 19 },
   footerText: { flex: 1, color: "#7E889B", fontSize: 12, lineHeight: 17 },
   pressed: { opacity: 0.68 },
