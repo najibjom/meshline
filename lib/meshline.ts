@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 
 export type DeliveryStatus = "sending" | "delivered" | "local";
 export type MessageDirection = "outbound" | "inbound" | "system";
+export type ConversationKind = "direct" | "group" | "channel";
 
 export type Identity = {
   displayName: string;
@@ -21,6 +22,10 @@ export type Conversation = {
   peerDisplayName: string;
   createdAt: string;
   updatedAt: string;
+  kind?: ConversationKind;
+  description?: string;
+  memberUsernames?: string[];
+  createdBy?: string;
   isGuide?: boolean;
   isPinned?: boolean;
 };

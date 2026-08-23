@@ -13,7 +13,7 @@ import { haptic } from "@/lib/haptics";
 export default function ChatScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { state, deleteMessage, sendMessage, toggleConversationPin } = useMeshline();
+  const { identity, state, deleteMessage, sendMessage, toggleConversationPin } = useMeshline();
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
@@ -27,7 +27,13 @@ export default function ChatScreen() {
     return <ScreenContainer className="items-center justify-center bg-[#F6F7FB]"><Text style={styles.missing}>This conversation is not available.</Text><Pressable onPress={() => router.back()} style={styles.returnButton}><Text style={styles.returnText}>Return to chats</Text></Pressable></ScreenContainer>;
   }
 
+  const isChannel = conversation.kind === "channel";
+  const isGroup = conversation.kind === "group";
+  const canPost = !isChannel || conversation.createdBy === identity?.username;
+  const memberCount = conversation.memberUsernames?.length ?? 0;
+
   const send = async () => {
+    if (!canPost) return;
     if (!draft.trim()) return;
     const text = draft;
     setDraft("");
@@ -52,8 +58,8 @@ export default function ChatScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })} keyboardVerticalOffset={0}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable>
-          {conversation.isGuide ? <View style={styles.guideMark}><MeshlineMark size={27} /></View> : <Avatar label={conversation.peerDisplayName} size={38} tone="emerald" />}
-          <View style={styles.headerCopy}><Text style={styles.name}>{conversation.peerDisplayName}</Text><Text style={styles.handle}>{conversation.peerUsername}</Text></View>
+          {conversation.isGuide ? <View style={styles.guideMark}><MeshlineMark size={27} /></View> : isGroup ? <View style={styles.spaceMark}><MaterialIcons name="group" size={22} color={palette.indigo} /></View> : isChannel ? <View style={styles.spaceMark}><MaterialIcons name="campaign" size={22} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={38} tone="emerald" />}
+          <View style={styles.headerCopy}><Text style={styles.name}>{conversation.peerDisplayName}</Text><Text style={styles.handle}>{isGroup ? `${memberCount || 1} member${memberCount === 1 ? "" : "s"}` : isChannel ? `${memberCount || 1} subscriber${memberCount === 1 ? "" : "s"} · owner posts` : conversation.peerUsername}</Text></View>
           <Pressable onPress={() => void toggleConversationPin(conversation.id)} hitSlop={8} style={({ pressed }) => [styles.pinButton, conversation.isPinned && styles.pinButtonActive, pressed && styles.pressed]} accessibilityLabel={conversation.isPinned ? "Unpin conversation" : "Pin conversation"}><MaterialIcons name="push-pin" size={18} color={conversation.isPinned ? "#FFFFFF" : palette.indigo} /></Pressable>
         </View>
         <FlatList
@@ -62,13 +68,13 @@ export default function ChatScreen() {
           keyExtractor={(message) => message.id}
           contentContainerStyle={styles.messages}
           renderItem={({ item }) => <MessageBubble message={item} onLongPress={() => item.direction !== "system" && setActionMessage(item)} />}
-          ListHeaderComponent={<View style={styles.notice}><MaterialIcons name="info-outline" size={16} color="#75809A" /><Text style={styles.noticeText}>The messaging interface is working locally. Network transport and end-to-end encryption are protocol milestones, not active in this mobile prototype.</Text></View>}
+          ListHeaderComponent={<View style={styles.notice}><MaterialIcons name={isChannel ? "campaign" : isGroup ? "group" : "info-outline"} size={16} color="#75809A" /><Text style={styles.noticeText}>{isChannel ? `${conversation.description || "Local channel"}. Only the creator can post in this local-first channel; encrypted broadcast relays are a future protocol milestone.` : isGroup ? `${conversation.description || "Local group"}. Member identity and encrypted group delivery will be handled by the future network protocol.` : "The messaging interface is working locally. Network transport and end-to-end encryption are protocol milestones, not active in this mobile prototype."}</Text></View>}
         />
         {actionMessage ? <View style={styles.actionTray}><View style={styles.actionTrayCopy}><Text numberOfLines={1} style={styles.actionTrayText}>{actionMessage.body}</Text></View><Pressable onPress={() => { setReplyTo(actionMessage); setActionMessage(null); }} style={styles.actionButton}><MaterialIcons name="reply" size={18} color={palette.indigo} /><Text style={styles.actionText}>Reply</Text></Pressable><Pressable onPress={() => void copyMessage()} style={styles.actionButton}><MaterialIcons name="content-copy" size={18} color={palette.indigo} /><Text style={styles.actionText}>Copy</Text></Pressable><Pressable onPress={() => { void deleteMessage(conversation.id, actionMessage.id); setActionMessage(null); haptic.warning(); }} style={styles.actionButton}><MaterialIcons name="delete-outline" size={19} color={palette.coral} /><Text style={[styles.actionText, { color: palette.coral }]}>Delete</Text></Pressable><Pressable onPress={() => setActionMessage(null)} hitSlop={8}><MaterialIcons name="close" size={20} color={palette.muted} /></Pressable></View> : null}
         <View style={styles.composerWrap}>
           {replyTo ? <View style={styles.replyBar}><View style={styles.replyLine} /><View style={styles.replyCopy}><Text style={styles.replyLabel}>Replying to</Text><Text numberOfLines={1} style={styles.replyText}>{replyTo.body}</Text></View><Pressable onPress={() => setReplyTo(null)} hitSlop={8}><MaterialIcons name="close" size={18} color={palette.muted} /></Pressable></View> : null}
-          <View style={styles.composer}><TextInput value={draft} onChangeText={setDraft} placeholder="Write a message" placeholderTextColor="#9099AA" style={styles.composerInput} multiline maxLength={2000} returnKeyType="default" /><Pressable onPress={send} disabled={!draft.trim()} style={({ pressed }) => [styles.send, !draft.trim() && styles.sendDisabled, pressed && draft.trim() && styles.pressed]}><MaterialIcons name="arrow-upward" size={20} color="#FFFFFF" /></Pressable></View>
-          <Text style={styles.composerNote}>Text only · No media in this MVP</Text>
+          {canPost ? <View style={styles.composer}><TextInput value={draft} onChangeText={setDraft} placeholder={isChannel ? "Publish an update" : "Write a message"} placeholderTextColor="#9099AA" style={styles.composerInput} multiline maxLength={2000} returnKeyType="default" /><Pressable onPress={send} disabled={!draft.trim()} style={({ pressed }) => [styles.send, !draft.trim() && styles.sendDisabled, pressed && draft.trim() && styles.pressed]}><MaterialIcons name="arrow-upward" size={20} color="#FFFFFF" /></Pressable></View> : <View style={styles.readOnlyComposer}><MaterialIcons name="campaign" size={18} color={palette.muted} /><Text style={styles.readOnlyText}>Only the channel owner can post</Text></View>}
+          <Text style={styles.composerNote}>{isChannel ? "Owner broadcast · Text only" : "Text only · No media in this MVP"}</Text>
         </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
@@ -96,6 +102,7 @@ const styles = StyleSheet.create({
   header: { minHeight: 64, backgroundColor: "#FFFFFF", borderBottomColor: palette.line, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 9 },
   back: { width: 37, height: 37, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   guideMark: { width: 38, height: 38, borderRadius: 13, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
+  spaceMark: { width: 38, height: 38, borderRadius: 13, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
   headerCopy: { flex: 1, gap: 0 },
   name: { color: palette.ink, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   handle: { color: palette.muted, fontSize: 12, lineHeight: 16 },
@@ -137,6 +144,8 @@ const styles = StyleSheet.create({
   replyLabel: { color: palette.indigo, fontSize: 10, lineHeight: 13, fontWeight: "800" },
   replyText: { color: palette.muted, fontSize: 12, lineHeight: 16 },
   composer: { minHeight: 48, maxHeight: 120, borderRadius: 17, backgroundColor: "#F0F2F7", flexDirection: "row", alignItems: "flex-end", paddingLeft: 14, paddingRight: 5, paddingVertical: 5 },
+  readOnlyComposer: { minHeight: 48, borderRadius: 17, backgroundColor: "#F0F2F7", flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", paddingHorizontal: 14 },
+  readOnlyText: { color: palette.muted, fontSize: 13, lineHeight: 18, fontWeight: "700" },
   composerInput: { flex: 1, minHeight: 38, maxHeight: 96, color: palette.ink, fontSize: 16, lineHeight: 21, paddingTop: 9, paddingBottom: 6 },
   send: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: palette.indigo, marginLeft: 5 },
   sendDisabled: { backgroundColor: "#BFC6D6" },

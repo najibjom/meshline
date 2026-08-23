@@ -16,6 +16,7 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="recovery" />
           <Stack.Screen name="new-chat" />
+          <Stack.Screen name="new-space" />
           <Stack.Screen name="chat/[id]" />
           <Stack.Screen name="storage" />
           <Stack.Screen name="privacy" />

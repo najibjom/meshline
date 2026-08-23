@@ -42,7 +42,7 @@ export default function ChatsScreen() {
                   <Text style={styles.username}>{identity.username}</Text>
                 </View>
               </View>
-              <Pressable onPress={() => router.push("/new-chat")} style={({ pressed }) => [styles.compose, pressed && styles.pressed]} accessibilityLabel="Start a new chat">
+              <Pressable onPress={() => router.push("/new-space")} style={({ pressed }) => [styles.compose, pressed && styles.pressed]} accessibilityLabel="Create a chat, group, or channel">
                 <MaterialIcons name="edit" size={20} color="#FFFFFF" />
               </Pressable>
             </View>
@@ -67,11 +67,11 @@ export default function ChatsScreen() {
   );
 }
 
-function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; isGuide?: boolean; isPinned?: boolean }; latest?: Message; onPress: () => void }) {
+function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; kind?: "direct" | "group" | "channel"; isGuide?: boolean; isPinned?: boolean }; latest?: Message; onPress: () => void }) {
   const preview = latest?.body ?? "No messages yet";
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.conversation, pressed && styles.pressed]}>
-      {conversation.isGuide ? <View style={styles.guideAvatar}><MeshlineMark size={30} /></View> : <Avatar label={conversation.peerDisplayName} size={48} tone="emerald" />}
+      {conversation.isGuide ? <View style={styles.guideAvatar}><MeshlineMark size={30} /></View> : conversation.kind === "group" ? <View style={styles.spaceAvatar}><MaterialIcons name="group" size={24} color={palette.indigo} /></View> : conversation.kind === "channel" ? <View style={styles.spaceAvatar}><MaterialIcons name="campaign" size={24} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={48} tone="emerald" />}
       <View style={styles.conversationCopy}>
         <View style={styles.conversationTop}>
           <Text numberOfLines={1} style={styles.conversationName}>{conversation.peerDisplayName}</Text>
@@ -79,7 +79,7 @@ function ConversationRow({ conversation, latest, onPress }: { conversation: { pe
           <Text style={styles.conversationTime}>{formatConversationTime(conversation.updatedAt)}</Text>
         </View>
         <View style={styles.previewRow}>
-          <Text numberOfLines={1} style={styles.preview}>{preview}</Text>
+          {conversation.kind && conversation.kind !== "direct" ? <Text style={styles.spaceLabel}>{conversation.kind === "group" ? "GROUP" : "CHANNEL"}</Text> : null}<Text numberOfLines={1} style={styles.preview}>{preview}</Text>
           {latest?.direction === "outbound" ? <MaterialIcons name={latest.status === "delivered" ? "done-all" : "done"} size={16} color={latest.status === "delivered" ? palette.indigo : "#98A1B3"} /> : null}
         </View>
       </View>
@@ -101,12 +101,14 @@ const styles = StyleSheet.create({
   sectionLabel: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 22, marginBottom: 8, marginLeft: 4 },
   conversation: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, borderBottomColor: "#E9ECF4", borderBottomWidth: StyleSheet.hairlineWidth },
   guideAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
+  spaceAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
   conversationCopy: { flex: 1, gap: 5 },
   conversationTop: { flexDirection: "row", alignItems: "center", gap: 10 },
   conversationName: { flex: 1, color: palette.ink, fontSize: 16, lineHeight: 21, fontWeight: "700" },
   conversationTime: { color: "#8B95A7", fontSize: 12, lineHeight: 16, fontWeight: "600" },
   previewRow: { flexDirection: "row", gap: 6, alignItems: "center" },
   preview: { flex: 1, color: palette.muted, fontSize: 14, lineHeight: 19 },
+  spaceLabel: { color: palette.indigo, fontSize: 9, lineHeight: 13, fontWeight: "800", letterSpacing: 0.55 },
   empty: { alignItems: "center", paddingTop: 54, paddingHorizontal: 36 },
   emptyTitle: { color: palette.ink, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   emptyText: { color: palette.muted, fontSize: 14, lineHeight: 20, textAlign: "center", marginTop: 6 },

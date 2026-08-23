@@ -8,6 +8,7 @@ import {
   clearLocalSession,
   Contact,
   Conversation,
+  ConversationKind,
   deleteLocalMeshlineAccount,
   emptyMeshlineState,
   Identity,
@@ -44,6 +45,7 @@ type MeshlineContextValue = {
   updateProfileDescription: (description: string) => Promise<void>;
   acknowledgeRecovery: () => Promise<void>;
   startConversation: (username: string) => Promise<string>;
+  createSpace: (kind: "group" | "channel", title: string, description: string, memberUsernames: string[]) => Promise<string>;
   saveContact: (displayName: string, username: string) => Promise<void>;
   removeContact: (username: string) => Promise<void>;
   toggleConversationPin: (conversationId: string) => Promise<void>;
@@ -157,6 +159,39 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     return conversation.id;
   }, [state]);
 
+  const createSpace = useCallback(async (kind: "group" | "channel", titleInput: string, descriptionInput: string, memberUsernames: string[]) => {
+    if (!state.identity) throw new Error("A local identity is required to create a space.");
+    const title = titleInput.trim().slice(0, 60);
+    const description = descriptionInput.trim().slice(0, 180);
+    const createdAt = new Date().toISOString();
+    const id = Crypto.randomUUID();
+    const members = Array.from(new Set([state.identity.username, ...memberUsernames]));
+    const conversation: Conversation = {
+      id,
+      peerUsername: `@${kind}_${id.replace(/-/g, "").slice(0, 10)}`,
+      peerDisplayName: title,
+      createdAt,
+      updatedAt: createdAt,
+      kind,
+      description,
+      memberUsernames: members,
+      createdBy: state.identity.username,
+    };
+    const noun = kind === "group" ? "group" : "channel";
+    const message: Message = {
+      id: Crypto.randomUUID(),
+      conversationId: id,
+      body: `${title} was created locally as a ${noun}. ${kind === "channel" ? "Only the local owner can post in this channel." : "Members are ready for text discussion."} Encrypted group transport is a future protocol milestone.`,
+      direction: "system",
+      status: "local",
+      createdAt,
+    };
+    const next = { ...state, conversations: [conversation, ...state.conversations], messages: { ...state.messages, [id]: [message] } };
+    setState(next);
+    await persistMeshlineState(next);
+    return id;
+  }, [state]);
+
   const toggleConversationPin = useCallback(async (conversationId: string) => {
     commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, isPinned: !conversation.isPinned } : conversation) }));
   }, [commit]);
@@ -208,8 +243,8 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   }, [state.identity]);
 
   const value = useMemo<MeshlineContextValue>(() => ({
-    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, saveContact, removeContact, toggleConversationPin, sendMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateDisplayName, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateUsername]);
+    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, createSpace, saveContact, removeContact, toggleConversationPin, sendMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
+  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, createSpace, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateDisplayName, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateUsername]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }

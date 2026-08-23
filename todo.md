@@ -27,5 +27,7 @@
 - [x] Add a clear Profile-level logout button that ends the local session without deleting local data.
 - [x] Add local username editing with identity-reference consistency.
 - [x] Add a clearly confirmed Profile account-deletion flow that removes all local Meshline data.
+- [x] Add local-first group chat creation with member selection and group messaging.
+- [x] Add local-first channel creation with admin-only posting rules and subscriber viewing.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.
