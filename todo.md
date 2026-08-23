@@ -107,6 +107,7 @@
 - [x] Refresh core screen hierarchy, spacing, and theme-aware surfaces while preserving the fixed Chats connection banner and Network updates entry.
 - [x] Publish the theme-aware Network and conversation polish to production-apk for runtime 1.0.7.
 - [ ] Strengthen the experimental encrypted transport with robust device trust, key lifecycle, and replay-safety foundations.
+- [x] Document a staged, audit-first X3DH, Double Ratchet, key-transparency, and device-lifecycle roadmap without representing it as implemented.
 - [x] Add local contact key-fingerprint observation and visible key-change notices without misrepresenting production verification.
 - [ ] Synchronize text-only group and channel messaging, membership, and owner permissions across devices.
 - [x] Add experimental encrypted per-member fanout for text-only group and channel messages across registered devices.
