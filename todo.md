@@ -46,7 +46,7 @@
 - [ ] Complete the physical two-device encrypted-text verification with separate installed Meshline clients.
 - [x] Configure a dedicated production APK Expo OTA channel and identify APKs without an embedded update channel.
 - [ ] Build and install one update-enabled Meshline APK with the production-apk OTA channel in both Xiaomi Spaces.
-- [ ] Repair low-contrast and invisible text or button states throughout the mobile interface.
-- [ ] Add a user-controlled functional light and dark mode across Meshline.
+- [x] Repair low-contrast and invisible text or button states throughout the mobile interface.
+- [x] Add a user-controlled functional light and dark mode across Meshline.
 - [ ] Release compatible JavaScript/UI changes directly to the production-apk OTA channel without creating a new APK.
 - [x] Add in-app check, download, and restart controls for compatible Meshline OTA updates.
