@@ -3,7 +3,8 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { Avatar, MeshlineMark, palette, StatusPill } from "@/components/meshline-ui";
+import { MeshlineConnectionBanner } from "@/components/meshline-connection-banner";
+import { Avatar, MeshlineMark, palette } from "@/components/meshline-ui";
 import { ScreenContainer } from "@/components/screen-container";
 import { formatConversationTime, Message } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
@@ -28,6 +29,9 @@ export default function ChatsScreen() {
 
   return (
     <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
+      <View style={styles.connectionWrap}>
+        <MeshlineConnectionBanner />
+      </View>
       <FlatList
         data={filteredConversations}
         keyExtractor={(item) => item.id}
@@ -45,10 +49,6 @@ export default function ChatsScreen() {
               <Pressable onPress={() => router.push("/new-space")} style={({ pressed }) => [styles.compose, pressed && styles.pressed]} accessibilityLabel="Create a chat, group, or channel">
                 <MaterialIcons name="edit" size={20} color="#FFFFFF" />
               </Pressable>
-            </View>
-            <View style={styles.statusRow}>
-              <StatusPill icon="lock-outline" variant="success">Local identity ready</StatusPill>
-              <StatusPill icon="device-hub">Transport: prototype</StatusPill>
             </View>
             <View style={styles.searchWrap}>
               <MaterialIcons name="search" size={20} color="#8B95A7" />
@@ -88,14 +88,14 @@ function ConversationRow({ conversation, latest, onPress }: { conversation: { pe
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 28, flexGrow: 1 },
+  connectionWrap: { paddingHorizontal: 18, paddingTop: 10 },
+  content: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 28, flexGrow: 1 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 11 },
   brandCopy: { gap: 1 },
   brand: { color: palette.ink, fontSize: 23, lineHeight: 28, fontWeight: "800", letterSpacing: -0.4 },
   username: { color: palette.muted, fontSize: 13, lineHeight: 17, fontWeight: "600" },
   compose: { width: 42, height: 42, borderRadius: 15, backgroundColor: palette.indigo, justifyContent: "center", alignItems: "center" },
-  statusRow: { flexDirection: "row", gap: 8, flexWrap: "wrap", marginBottom: 17 },
   searchWrap: { height: 45, backgroundColor: "#ECEFF5", borderRadius: 14, flexDirection: "row", alignItems: "center", paddingHorizontal: 13, gap: 8 },
   search: { flex: 1, height: "100%", color: palette.ink, fontSize: 16 },
   sectionLabel: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 22, marginBottom: 8, marginLeft: 4 },
