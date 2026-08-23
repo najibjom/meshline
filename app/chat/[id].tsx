@@ -29,7 +29,9 @@ export default function ChatScreen() {
 
   const isChannel = conversation.kind === "channel";
   const isGroup = conversation.kind === "group";
-  const canPost = !isChannel || conversation.createdBy === identity?.username;
+  // Device identity remains stable when a user changes their local @username.
+  // Legacy local channels lack this field, so they remain writable on the creating device.
+  const canPost = !isChannel || !conversation.createdByDeviceId || conversation.createdByDeviceId === identity?.deviceId;
   const memberCount = conversation.memberUsernames?.length ?? 0;
 
   const send = async () => {

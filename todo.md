@@ -31,5 +31,6 @@
 - [x] Add local-first channel creation with admin-only posting rules and subscriber viewing.
 - [x] Move local username editing into the Profile identity card and remove the password prompt.
 - [x] Add user-defined @usernames to local group chats and channels.
+- [x] Fix channel owner posting after a local username change.
 - [ ] Produce a validated design for an audited encrypted two-device transport foundation.
 - [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.

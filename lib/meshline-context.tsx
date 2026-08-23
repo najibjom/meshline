@@ -178,6 +178,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       description,
       memberUsernames: members,
       createdBy: state.identity.username,
+      createdByDeviceId: state.identity.deviceId,
     };
     const noun = kind === "group" ? "group" : "channel";
     const message: Message = {

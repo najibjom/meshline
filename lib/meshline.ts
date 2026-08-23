@@ -26,6 +26,7 @@ export type Conversation = {
   description?: string;
   memberUsernames?: string[];
   createdBy?: string;
+  createdByDeviceId?: string;
   isGuide?: boolean;
   isPinned?: boolean;
 };
