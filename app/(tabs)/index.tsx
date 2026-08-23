@@ -6,13 +6,14 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, Vi
 import { MeshlineConnectionBanner } from "@/components/meshline-connection-banner";
 import { Avatar, MeshlineMark, palette } from "@/components/meshline-ui";
 import { ScreenContainer } from "@/components/screen-container";
+import { findGlobalMessageResults, findGlobalPeopleResults, GlobalMessageResult, GlobalPeopleResult } from "@/lib/global-search";
 import { formatConversationTime, Message } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
 import { useColors } from "@/hooks/use-colors";
 
 export default function ChatsScreen() {
   const router = useRouter();
-  const { ready, identity, isAuthenticated, state } = useMeshline();
+  const { ready, identity, isAuthenticated, startConversation, state } = useMeshline();
   const colors = useColors();
   const [query, setQuery] = useState("");
 
@@ -24,6 +25,13 @@ export default function ChatsScreen() {
   const filteredConversations = useMemo(() => state.conversations
     .filter((conversation) => `${conversation.peerDisplayName} ${conversation.peerUsername}`.toLowerCase().includes(query.toLowerCase()))
     .sort((left, right) => Number(Boolean(right.isSavedMessages)) - Number(Boolean(left.isSavedMessages)) || Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned)) || new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()), [query, state.conversations]);
+  const globalPeopleResults = useMemo(() => findGlobalPeopleResults(state.conversations, state.contacts, query), [query, state.contacts, state.conversations]);
+  const globalMessageResults = useMemo(() => findGlobalMessageResults(state.conversations, state.messages, query), [query, state.conversations, state.messages]);
+  const hasSearchQuery = Boolean(query.trim());
+  const openPeopleResult = async (result: GlobalPeopleResult) => {
+    const conversationId = result.kind === "conversation" ? result.conversation.id : await startConversation(result.contact.username);
+    router.push({ pathname: "/chat/[id]", params: { id: conversationId } });
+  };
 
   if (!ready || !identity || !isAuthenticated) {
     return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
@@ -35,7 +43,7 @@ export default function ChatsScreen() {
         <MeshlineConnectionBanner />
       </View>
       <FlatList
-        data={filteredConversations}
+        data={hasSearchQuery ? [] : filteredConversations}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.content}
         ListHeaderComponent={
@@ -54,19 +62,35 @@ export default function ChatsScreen() {
             </View>
             <View style={[styles.searchWrap, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
               <MaterialIcons name="search" size={20} color={colors.muted} />
-              <TextInput value={query} onChangeText={setQuery} placeholder="Search chats" placeholderTextColor={colors.muted} style={[styles.search, { color: colors.text }]} returnKeyType="search" />
+              <TextInput value={query} onChangeText={setQuery} placeholder="Search chats, @usernames, messages" placeholderTextColor={colors.muted} style={[styles.search, { color: colors.text }]} returnKeyType="search" />
             </View>
-            <Text style={[styles.sectionLabel, { color: colors.muted }]}>MESSAGES</Text>
+            {hasSearchQuery ? <>
+              <Text style={[styles.searchHint, { color: colors.muted }]}>Searches chats, saved contacts, and message text on this device.</Text>
+              {globalPeopleResults.length ? <><Text style={[styles.sectionLabel, { color: colors.muted }]}>CHATS & PEOPLE</Text>{globalPeopleResults.map((result) => <GlobalPeopleRow key={result.kind === "conversation" ? `chat-${result.conversation.id}` : `contact-${result.contact.id}`} result={result} onPress={() => void openPeopleResult(result)} />)}</> : null}
+              {globalMessageResults.length ? <><Text style={[styles.sectionLabel, { color: colors.muted }]}>MESSAGES</Text>{globalMessageResults.map((result) => <GlobalMessageRow key={result.message.id} result={result} onPress={() => router.push({ pathname: "/chat/[id]", params: { id: result.conversation.id } })} />)}</> : null}
+            </> : <Text style={[styles.sectionLabel, { color: colors.muted }]}>MESSAGES</Text>}
           </>
         }
         renderItem={({ item }) => {
           const latest = state.messages[item.id]?.at(-1);
           return <ConversationRow conversation={item} latest={latest} onPress={() => router.push({ pathname: "/chat/[id]", params: { id: item.id } })} />;
         }}
-        ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyTitle}>No chats found</Text><Text style={styles.emptyText}>Try a different username or start a new chat.</Text></View>}
+        ListEmptyComponent={hasSearchQuery ? (globalPeopleResults.length || globalMessageResults.length ? null : <View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.text }]}>No results found</Text><Text style={[styles.emptyText, { color: colors.muted }]}>Try another name, @username, or word from a message.</Text></View>) : <View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.text }]}>No chats found</Text><Text style={[styles.emptyText, { color: colors.muted }]}>Try a different username or start a new chat.</Text></View>}
       />
     </ScreenContainer>
   );
+}
+
+function GlobalPeopleRow({ result, onPress }: { result: GlobalPeopleResult; onPress: () => void }) {
+  const colors = useColors();
+  const label = result.kind === "conversation" ? result.conversation.peerDisplayName : result.contact.displayName;
+  const username = result.kind === "conversation" ? result.conversation.peerUsername : result.contact.username;
+  return <Pressable onPress={onPress} style={({ pressed }) => [styles.globalRow, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}><Avatar label={label} size={38} tone="emerald" /><View style={styles.globalCopy}><Text numberOfLines={1} style={[styles.globalTitle, { color: colors.text }]}>{label}</Text><Text numberOfLines={1} style={[styles.globalSubtitle, { color: colors.muted }]}>{username}</Text></View><MaterialIcons name="chevron-right" size={20} color={colors.muted} /></Pressable>;
+}
+
+function GlobalMessageRow({ result, onPress }: { result: GlobalMessageResult; onPress: () => void }) {
+  const colors = useColors();
+  return <Pressable onPress={onPress} style={({ pressed }) => [styles.globalRow, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}><View style={styles.messageSearchIcon}><MaterialIcons name="chat-bubble-outline" size={18} color={palette.indigo} /></View><View style={styles.globalCopy}><Text numberOfLines={1} style={[styles.globalTitle, { color: colors.text }]}>{result.conversation.peerDisplayName} <Text style={[styles.globalHandle, { color: colors.muted }]}>{result.conversation.peerUsername}</Text></Text><Text numberOfLines={2} style={[styles.globalSubtitle, { color: colors.muted }]}>{result.message.body}</Text></View><Text style={[styles.globalTime, { color: colors.muted }]}>{formatConversationTime(result.message.createdAt)}</Text></Pressable>;
 }
 
 function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; kind?: "direct" | "group" | "channel"; isGuide?: boolean; isSavedMessages?: boolean; isPinned?: boolean }; latest?: Message; onPress: () => void }) {
@@ -101,7 +125,15 @@ const styles = StyleSheet.create({
   compose: { width: 42, height: 42, borderRadius: 15, backgroundColor: palette.indigo, justifyContent: "center", alignItems: "center" },
   searchWrap: { height: 45, backgroundColor: "#ECEFF5", borderRadius: 14, flexDirection: "row", alignItems: "center", paddingHorizontal: 13, gap: 8 },
   search: { flex: 1, height: "100%", color: palette.ink, fontSize: 16 },
+  searchHint: { fontSize: 12, lineHeight: 17, marginTop: 9, marginLeft: 3 },
   sectionLabel: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 22, marginBottom: 8, marginLeft: 4 },
+  globalRow: { minHeight: 62, borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 7 },
+  globalCopy: { flex: 1, gap: 2 },
+  globalTitle: { fontSize: 14, lineHeight: 19, fontWeight: "800" },
+  globalSubtitle: { fontSize: 12, lineHeight: 17 },
+  globalHandle: { fontWeight: "600" },
+  globalTime: { fontSize: 11, lineHeight: 15, fontWeight: "600" },
+  messageSearchIcon: { width: 38, height: 38, borderRadius: 13, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
   conversation: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, borderBottomColor: "#E9ECF4", borderBottomWidth: StyleSheet.hairlineWidth },
   guideAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
   spaceAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" }, savedAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center" },

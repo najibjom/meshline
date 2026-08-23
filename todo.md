@@ -91,3 +91,4 @@
 - [x] Fix relay device registration so two connected installed Meshline clients can discover one another by username.
 - [x] Publish relay-readiness diagnostics to production-apk for the installed 1.0.7 phone and emulator runtimes.
 - [x] Push the completed emulator compatibility and relay-readiness updates to the authorized Meshline GitHub repository.
+- [x] Add global Chats search for conversation display names, @usernames, and matching message text.
