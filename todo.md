@@ -42,3 +42,5 @@
 - [x] Define decentralized name resolution and relay architecture after the encrypted transport model.
 - [x] Produce a validated design for an audited encrypted two-device transport foundation.
 - [x] Produce a decentralized username-resolution and encrypted relay architecture specification.
+- [x] Implement an opaque development relay and device-side encrypted direct-text proof of concept.
+- [ ] Complete the physical two-device encrypted-text verification with separate installed Meshline clients.
