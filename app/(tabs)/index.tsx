@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { Avatar, MeshlineMark, palette, StatusPill } from "@/components/meshline-ui";
+import { MeshlineConnectionBanner } from "@/components/meshline-connection-banner";
 import { ScreenContainer } from "@/components/screen-container";
 import { formatConversationTime, Message } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
@@ -50,6 +51,7 @@ export default function ChatsScreen() {
               <StatusPill icon="lock-outline" variant="success">Local identity ready</StatusPill>
               <StatusPill icon="device-hub">Transport: prototype</StatusPill>
             </View>
+            <MeshlineConnectionBanner />
             <View style={styles.searchWrap}>
               <MaterialIcons name="search" size={20} color="#8B95A7" />
               <TextInput value={query} onChangeText={setQuery} placeholder="Search chats" placeholderTextColor="#8B95A7" style={styles.search} returnKeyType="search" />

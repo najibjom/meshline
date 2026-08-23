@@ -24,6 +24,10 @@ export const OWNER_OPEN_ID = env.ownerId;
 export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
 
+// Installed Android and iOS builds have no browser hostname from which to infer
+// an API origin. This is Meshline's published backend and relay service.
+const DEFAULT_MESHLINE_API_BASE_URL = "https://meshline-bpoqvmax.manus.space";
+
 /**
  * Get the API base URL, deriving from current hostname if not set.
  * Metro runs on 8081, API server runs on 3000.
@@ -45,8 +49,8 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Fallback to empty (will use relative URL)
-  return "";
+  // A relative /api path cannot reach the deployed backend from an installed phone.
+  return DEFAULT_MESHLINE_API_BASE_URL;
 }
 
 export const SESSION_TOKEN_KEY = "app_session_token";
