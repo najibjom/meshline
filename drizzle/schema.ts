@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,38 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Public proof-of-concept relay key currently associated with a Meshline username.
+ * Only public material is stored; device private keys never leave the client.
+ */
+export const relayDevices = mysqlTable("relay_devices", {
+  username: varchar("username", { length: 25 }).primaryKey(),
+  publicKey: varchar("public_key", { length: 120 }).notNull(),
+  registeredAt: timestamp("registered_at").defaultNow().notNull(),
+  lastSeenAt: timestamp("last_seen_at").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Opaque encrypted envelopes waiting for a recipient device. The relay stores
+ * ciphertext only, retains envelopes for a limited time, and records an
+ * acknowledgement without accessing message plaintext.
+ */
+export const relayEnvelopes = mysqlTable("relay_envelopes", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  recipientUsername: varchar("recipient_username", { length: 25 }).notNull(),
+  senderUsername: varchar("sender_username", { length: 25 }).notNull(),
+  senderPublicKey: varchar("sender_public_key", { length: 120 }).notNull(),
+  nonce: varchar("nonce", { length: 80 }).notNull(),
+  ciphertext: text("ciphertext").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acknowledgedAt: timestamp("acknowledged_at"),
+}, (table) => [
+  index("relay_envelopes_inbox_idx").on(table.recipientUsername, table.acknowledgedAt, table.expiresAt, table.createdAt),
+  index("relay_envelopes_sender_idx").on(table.senderUsername, table.createdAt),
+]);
+
+export type RelayDevice = typeof relayDevices.$inferSelect;
+export type InsertRelayDevice = typeof relayDevices.$inferInsert;
+export type RelayEnvelope = typeof relayEnvelopes.$inferSelect;
+export type InsertRelayEnvelope = typeof relayEnvelopes.$inferInsert;

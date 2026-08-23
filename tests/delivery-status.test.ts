@@ -11,4 +11,8 @@ describe("Meshline direct-message delivery feedback", () => {
   it("keeps an unknown relay failure actionable without promising delivery", () => {
     expect(describeRelayDeliveryFailure(new Error("Network request failed"))).toContain("Check the connection banner");
   });
+
+  it("explains a temporary durable relay-storage fault separately from recipient availability", () => {
+    expect(describeRelayDeliveryFailure(new Error("Meshline durable relay storage is temporarily unavailable."))).toContain("temporarily saving messages offline");
+  });
 });

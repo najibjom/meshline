@@ -97,7 +97,7 @@ function MessageBubble({ message, isGuide, onLongPress }: { message: Message; is
       <View style={[styles.bubble, outbound ? styles.outboundBubble : styles.inboundBubble]}>
         {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : styles.inboundReplyPreview]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : styles.inboundReplyText]}>{message.replyTo.body}</Text></View> : null}
         <Text style={[styles.messageBody, outbound ? styles.outboundText : styles.inboundText]}>{message.body}</Text>
-        <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>{isGuide ? "Guide only" : message.failureDetail ?? "Not sent"}</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
+        <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>{isGuide ? "Guide only" : message.failureDetail ?? "Not sent"}</Text> : null}{outbound && message.status === "queued" ? <Text style={styles.queuedMeta}>Queued</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
       </View>
     </Pressable>
   );
@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
   messageTime: { fontSize: 10, lineHeight: 14 },
   outboundMeta: { color: "#DDE3FF" },
   failedMeta: { color: "#FFD3D8", fontSize: 10, lineHeight: 14, fontWeight: "800" },
+  queuedMeta: { color: "#DDE3FF", fontSize: 10, lineHeight: 14, fontWeight: "800" },
   inboundMeta: { color: "#98A1B3" },
   system: { alignSelf: "center", maxWidth: "88%", backgroundColor: "#EDF0F6", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 13, marginBottom: 13 },
   systemText: { color: "#667085", fontSize: 12, lineHeight: 17, textAlign: "center" },

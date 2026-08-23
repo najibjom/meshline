@@ -122,7 +122,11 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
             const body = decryptTextFromDevice(envelope, transportKey.secretKey, envelope.senderPublicKey);
             const createdAt = envelope.createdAt;
             setState((current) => {
-              if (Object.values(current.messages).flat().some((message) => message.transportEnvelopeId === envelope.id)) return current;
+              const alreadyStored = Object.values(current.messages).flat().some((message) => message.transportEnvelopeId === envelope.id);
+              if (alreadyStored) {
+                void acknowledgeRelayEnvelope(identity.username, envelope.id).catch((error) => console.warn("[Meshline relay proof] acknowledgement retry failed", error));
+                return current;
+              }
               const existingConversation = current.conversations.find((conversation) => conversation.peerUsername === envelope.senderUsername);
               const conversation = existingConversation ?? { id: Crypto.randomUUID(), peerUsername: envelope.senderUsername, peerDisplayName: envelope.senderUsername.slice(1), createdAt, updatedAt: createdAt };
               const message: Message = { id: Crypto.randomUUID(), conversationId: conversation.id, body, direction: "inbound", status: "delivered", createdAt, transportEnvelopeId: envelope.id };
@@ -131,10 +135,11 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
                 conversations: existingConversation ? current.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, updatedAt: createdAt } : candidate) : [conversation, ...current.conversations],
                 messages: { ...current.messages, [conversation.id]: [...(current.messages[conversation.id] ?? []), message] },
               };
-              void persistMeshlineState(next);
+              void persistMeshlineState(next)
+                .then(() => acknowledgeRelayEnvelope(identity.username, envelope.id))
+                .catch((error) => console.warn("[Meshline relay proof] inbox persistence or acknowledgement failed", error));
               return next;
             });
-            await acknowledgeRelayEnvelope(identity.username, envelope.id);
           } catch (error) {
             console.warn("[Meshline relay proof] rejected unauthenticated envelope", error);
           }
@@ -368,7 +373,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       const [transportKey, recipient] = await Promise.all([getOrCreateTransportDeviceKey(), lookupRelayDevice(conversation.peerUsername)]);
       const encrypted = encryptTextForDevice(body, transportKey.secretKey, recipient.publicKey);
       const envelope = await enqueueOpaqueEnvelope({ recipientUsername: conversation.peerUsername, senderUsername: state.identity.username, senderPublicKey: transportKey.publicKey, ...encrypted });
-      commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered", transportEnvelopeId: envelope.id } : candidate) } }));
+      commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "queued", transportEnvelopeId: envelope.id } : candidate) } }));
     } catch (error) {
       console.warn("[Meshline relay proof] text was not accepted by the relay", error);
       const failureDetail = describeRelayDeliveryFailure(error);
