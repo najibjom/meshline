@@ -107,5 +107,6 @@
 - [x] Add local contact key-fingerprint observation and visible key-change notices without misrepresenting production verification.
 - [ ] Synchronize text-only group and channel messaging, membership, and owner permissions across devices.
 - [x] Add experimental encrypted per-member fanout for text-only group and channel messages across registered devices.
+- [x] Publish device-trust notices and experimental cross-device space fanout to production-apk for runtime 1.0.7.
 - [ ] Synchronize space invitations, membership edits, and owner setting changes before the next space message is sent.
 - [ ] Add reliable messaging observability, offline-safe delivery states, unread indicators, and recovery behavior.
