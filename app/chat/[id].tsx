@@ -14,7 +14,7 @@ import { useColors } from "@/hooks/use-colors";
 export default function ChatScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { identity, state, deleteMessage, saveMessage, sendMessage, toggleConversationPin } = useMeshline();
+  const { identity, state, deleteMessage, markConversationRead, saveMessage, sendMessage, toggleConversationPin } = useMeshline();
   const colors = useColors();
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -23,7 +23,7 @@ export default function ChatScreen() {
   const conversation = state.conversations.find((item) => item.id === id);
   const messages = useMemo(() => state.messages[id] ?? [], [id, state.messages]);
 
-  useEffect(() => { requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true })); }, [messages.length]);
+  useEffect(() => { requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true })); void markConversationRead(id); }, [id, markConversationRead, messages.length]);
 
   if (!conversation) {
     return <ScreenContainer className="items-center justify-center"><Text style={[styles.missing, { color: colors.text }]}>This conversation is not available.</Text><Pressable onPress={() => router.back()} style={styles.returnButton}><Text style={styles.returnText}>Return to chats</Text></Pressable></ScreenContainer>;

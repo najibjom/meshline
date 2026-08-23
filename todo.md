@@ -112,3 +112,4 @@
 - [x] Send validated owner-authorized encrypted snapshots for group/channel title, description, membership, and group-permission changes to registered members.
 - [ ] Physically verify a group/channel owner change and member removal on two installed runtime-1.0.7 clients.
 - [ ] Add reliable messaging observability, offline-safe delivery states, unread indicators, and recovery behavior.
+- [x] Track real inbound unread messages locally and clear their indicators when the corresponding chat is opened.

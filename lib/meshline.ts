@@ -32,6 +32,7 @@ export type Conversation = {
   peerDisplayName: string;
   createdAt: string;
   updatedAt: string;
+  unreadCount?: number;
   /** Owner-managed group/channel metadata revision; unlike updatedAt, ordinary messages do not change it. */
   spaceUpdatedAt?: string;
   kind?: ConversationKind;

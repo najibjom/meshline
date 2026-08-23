@@ -64,6 +64,7 @@ type MeshlineContextValue = {
   saveContactAndStartConversation: (displayName: string, username: string) => Promise<string>;
   removeContact: (username: string) => Promise<void>;
   toggleConversationPin: (conversationId: string) => Promise<void>;
+  markConversationRead: (conversationId: string) => Promise<void>;
   sendMessage: (conversationId: string, text: string, replyTo?: ReplyReference) => Promise<void>;
   saveMessage: (text: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
@@ -152,6 +153,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
                 : spacePayload
                   ? { id: `space-sync-${spacePayload.updatedAt}`, conversationId: conversation.id, body: `The owner synchronized ${conversation.kind === "channel" ? "channel" : "group"} details, members, or posting permissions.`, direction: "system", status: "local", createdAt: spacePayload.updatedAt, transportEnvelopeId: envelope.id }
                 : { id: Crypto.randomUUID(), conversationId: conversation.id, body, direction: "inbound", senderUsername: envelope.senderUsername, status: "delivered", createdAt, transportEnvelopeId: envelope.id };
+              const unreadCount = message.direction === "inbound" ? 1 : 0;
               const keyNotice: Message | null = observed.keyChanged ? {
                 id: Crypto.randomUUID(),
                 conversationId: conversation.id,
@@ -162,7 +164,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
               } : null;
               const next: MeshlineState = {
                 ...observed.state,
-                conversations: existingConversation ? observed.state.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, ...(canApplySpaceSnapshot && !isStaleSpaceSnapshot ? { ...(spacePayload?.space ?? {}), spaceUpdatedAt: incomingSpaceUpdatedAt } : {}), updatedAt: createdAt } : candidate) : [conversation, ...observed.state.conversations],
+                conversations: existingConversation ? observed.state.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, ...(canApplySpaceSnapshot && !isStaleSpaceSnapshot ? { ...(spacePayload?.space ?? {}), spaceUpdatedAt: incomingSpaceUpdatedAt } : {}), updatedAt: createdAt, unreadCount: (candidate.unreadCount ?? 0) + unreadCount } : candidate) : [{ ...conversation, unreadCount }, ...observed.state.conversations],
                 messages: { ...observed.state.messages, [conversation.id]: [...(observed.state.messages[conversation.id] ?? []), message, ...(keyNotice ? [keyNotice] : [])] },
               };
               void persistMeshlineState(next)
@@ -421,6 +423,10 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, isPinned: !conversation.isPinned } : conversation) }));
   }, [commit]);
 
+  const markConversationRead = useCallback(async (conversationId: string) => {
+    commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId && conversation.unreadCount ? { ...conversation, unreadCount: 0 } : conversation) }));
+  }, [commit]);
+
   const sendMessage = useCallback(async (conversationId: string, text: string, replyTo?: ReplyReference) => {
     const body = text.trim();
     if (!body) return;
@@ -535,8 +541,8 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   }, [state.identity]);
 
   const value = useMemo<MeshlineContextValue>(() => ({
-    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, createSpace, updateChannelDetails, updateGroupDetails, updateSpaceMembers, updateGroupPermissions, saveContact, saveContactAndStartConversation, removeContact, toggleConversationPin, sendMessage, saveMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, createSpace, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, ready, removeContact, saveContact, saveContactAndStartConversation, saveMessage, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateChannelDetails, updateDisplayName, updateGroupDetails, updateGroupPermissions, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateSpaceMembers, updateUsername]);
+    ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateUsername, updateProfileDescription, acknowledgeRecovery, startConversation, createSpace, updateChannelDetails, updateGroupDetails, updateSpaceMembers, updateGroupPermissions, saveContact, saveContactAndStartConversation, removeContact, toggleConversationPin, markConversationRead, sendMessage, saveMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, deleteAccount, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,
+  }), [acknowledgeRecovery, appLocked, continueWithPassword, createIdentity, createSpace, deleteAccount, deleteMessage, isAuthenticated, loginIdentity, logout, markConversationRead, ready, removeContact, saveContact, saveContactAndStartConversation, saveMessage, sendMessage, startConversation, state, toggleConversationPin, unlockWithBiometrics, updateChannelDetails, updateDisplayName, updateGroupDetails, updateGroupPermissions, updateNetworkSettings, updatePrivacySettings, updateProfileDescription, updateSpaceMembers, updateUsername]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }
