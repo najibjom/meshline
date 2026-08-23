@@ -198,6 +198,11 @@ export function isLocalChannelOwner(conversation: Conversation, identity: Identi
   return conversation.kind === "channel" && Boolean(identity) && (!conversation.createdByDeviceId || conversation.createdByDeviceId === identity?.deviceId);
 }
 
+/** Groups use the same immutable local device owner model as channels. */
+export function isLocalGroupOwner(conversation: Conversation, identity: Identity | null) {
+  return conversation.kind === "group" && Boolean(identity) && (!conversation.createdByDeviceId || conversation.createdByDeviceId === identity?.deviceId);
+}
+
 export function matchesIdentityUsername(storedUsername: string, usernameInput: string) {
   return storedUsername === normalizeUsername(usernameInput);
 }

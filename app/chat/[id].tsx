@@ -1,12 +1,12 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Clipboard from "expo-clipboard";
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { Avatar, MeshlineMark, palette, StatusPill } from "@/components/meshline-ui";
 import { ScreenContainer } from "@/components/screen-container";
-import { formatMessageTime, isLocalChannelOwner, Message } from "@/lib/meshline";
+import { formatMessageTime, isLocalChannelOwner, isLocalGroupOwner, Message } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
 import { haptic } from "@/lib/haptics";
 
@@ -30,6 +30,7 @@ export default function ChatScreen() {
   const isChannel = conversation.kind === "channel";
   const isGroup = conversation.kind === "group";
   const isChannelOwner = isLocalChannelOwner(conversation, identity);
+  const isGroupOwner = isLocalGroupOwner(conversation, identity);
   const canPost = !isChannel || isChannelOwner;
   const memberCount = conversation.memberUsernames?.length ?? 0;
 
@@ -61,7 +62,7 @@ export default function ChatScreen() {
           <Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable>
           {conversation.isGuide ? <View style={styles.guideMark}><MeshlineMark size={27} /></View> : isGroup ? <View style={styles.spaceMark}><MaterialIcons name="group" size={22} color={palette.indigo} /></View> : isChannel ? <View style={styles.spaceMark}><MaterialIcons name="campaign" size={22} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={38} tone="emerald" />}
           <View style={styles.headerCopy}><Text numberOfLines={1} style={styles.name}>{conversation.peerDisplayName}</Text><Text numberOfLines={1} style={styles.handle}>{isGroup ? `${conversation.peerUsername} · ${memberCount || 1} member${memberCount === 1 ? "" : "s"}` : isChannel ? `${conversation.peerUsername} · ${memberCount || 1} subscriber${memberCount === 1 ? "" : "s"}` : conversation.peerUsername}</Text></View>
-          <View style={styles.headerActions}>{isChannel && isChannelOwner ? <Pressable onPress={() => router.push({ pathname: "/channel-settings/[id]", params: { id: conversation.id } })} hitSlop={8} style={({ pressed }) => [styles.pinButton, pressed && styles.pressed]} accessibilityLabel="Edit channel settings"><MaterialIcons name="edit" size={18} color={palette.indigo} /></Pressable> : null}<Pressable onPress={() => void toggleConversationPin(conversation.id)} hitSlop={8} style={({ pressed }) => [styles.pinButton, conversation.isPinned && styles.pinButtonActive, pressed && styles.pressed]} accessibilityLabel={conversation.isPinned ? "Unpin conversation" : "Pin conversation"}><MaterialIcons name="push-pin" size={18} color={conversation.isPinned ? "#FFFFFF" : palette.indigo} /></Pressable></View>
+          <View style={styles.headerActions}>{isChannel && isChannelOwner ? <Pressable onPress={() => router.push({ pathname: "/channel-settings/[id]", params: { id: conversation.id } })} hitSlop={8} style={({ pressed }) => [styles.pinButton, pressed && styles.pressed]} accessibilityLabel="Edit channel settings"><MaterialIcons name="edit" size={18} color={palette.indigo} /></Pressable> : null}{isGroup && isGroupOwner ? <Pressable onPress={() => router.push(`/group-settings/${conversation.id}` as Href)} hitSlop={8} style={({ pressed }) => [styles.pinButton, pressed && styles.pressed]} accessibilityLabel="Edit group settings"><MaterialIcons name="edit" size={18} color={palette.indigo} /></Pressable> : null}<Pressable onPress={() => void toggleConversationPin(conversation.id)} hitSlop={8} style={({ pressed }) => [styles.pinButton, conversation.isPinned && styles.pinButtonActive, pressed && styles.pressed]} accessibilityLabel={conversation.isPinned ? "Unpin conversation" : "Pin conversation"}><MaterialIcons name="push-pin" size={18} color={conversation.isPinned ? "#FFFFFF" : palette.indigo} /></Pressable></View>
         </View>
         <FlatList
           ref={listRef}

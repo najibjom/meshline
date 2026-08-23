@@ -19,6 +19,7 @@ export default function RootLayout() {
           <Stack.Screen name="new-space" />
           <Stack.Screen name="chat/[id]" />
           <Stack.Screen name="channel-settings/[id]" />
+          <Stack.Screen name="group-settings/[id]" />
           <Stack.Screen name="storage" />
           <Stack.Screen name="privacy" />
           <Stack.Screen name="security" />
