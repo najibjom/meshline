@@ -34,13 +34,19 @@ const DEFAULT_MESHLINE_API_BASE_URL = "https://meshline-bpoqvmax.manus.space";
  * URL pattern: https://PORT-sandboxid.region.domain
  */
 export function getApiBaseUrl(): string {
+  // Installed clients must always use Meshline's public relay. A build-time
+  // environment value can otherwise accidentally retain a private sandbox URL.
+  if (ReactNative.Platform.OS !== "web") {
+    return DEFAULT_MESHLINE_API_BASE_URL;
+  }
+
   // If API_BASE_URL is set, use it
   if (API_BASE_URL) {
     return API_BASE_URL.replace(/\/$/, "");
   }
 
   // On web, derive from current hostname by replacing port 8081 with 3000
-  if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
+  if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
     // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
@@ -49,8 +55,7 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Native builds require an absolute URL; a relative /api path cannot reach the
-  // deployed service from an installed phone.
+  // Fallback for non-browser renderers.
   return DEFAULT_MESHLINE_API_BASE_URL;
 }
 

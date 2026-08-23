@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Network from "expo-network";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { palette } from "@/components/meshline-ui";
@@ -13,6 +13,8 @@ import { getOrCreateTransportDeviceKey } from "@/lib/transport";
 
 const HEALTH_CHECK_ATTEMPTS = 2;
 const HEALTH_RETRY_DELAY_MS = 1_250;
+const HEALTH_TIMEOUT_MS = 7_000;
+const FAILURE_COUNT_BEFORE_OUTAGE = 3;
 
 function waitForRetry() {
   return new Promise<void>((resolve) => setTimeout(resolve, HEALTH_RETRY_DELAY_MS));
@@ -20,11 +22,15 @@ function waitForRetry() {
 
 async function isMeshlineServiceReachable(baseUrl: string) {
   for (let attempt = 0; attempt < HEALTH_CHECK_ATTEMPTS; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
     try {
-      const response = await fetch(`${baseUrl}/api/health`, { method: "GET", headers: { Accept: "application/json", "Cache-Control": "no-cache" } });
+      const response = await fetch(`${baseUrl}/api/health`, { method: "GET", headers: { Accept: "application/json" }, signal: controller.signal });
       if (response.ok) return true;
     } catch {
       // A fresh deployment can briefly wake before accepting the first request.
+    } finally {
+      clearTimeout(timeout);
     }
     if (attempt + 1 < HEALTH_CHECK_ATTEMPTS) await waitForRetry();
   }
@@ -37,6 +43,7 @@ export function MeshlineConnectionBanner() {
   const [serviceReachable, setServiceReachable] = useState<boolean | null>(null);
   const [relayDeviceReady, setRelayDeviceReady] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
+  const consecutiveServiceFailures = useRef(0);
   const internetReachable = network.isInternetReachable;
 
   const probe = useCallback(async () => {
@@ -51,8 +58,13 @@ export function MeshlineConnectionBanner() {
     try {
       const baseUrl = getApiBaseUrl().replace(/\/$/, "");
       const reachable = await isMeshlineServiceReachable(baseUrl);
-      setServiceReachable(reachable);
-      if (!reachable) return;
+      if (!reachable) {
+        consecutiveServiceFailures.current += 1;
+        setServiceReachable(consecutiveServiceFailures.current >= FAILURE_COUNT_BEFORE_OUTAGE ? false : null);
+        return;
+      }
+      consecutiveServiceFailures.current = 0;
+      setServiceReachable(true);
       if (!isAuthenticated || !identity) {
         setRelayDeviceReady(true);
         return;
