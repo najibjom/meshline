@@ -1,4 +1,3 @@
-# Project TODO
 
 - [x] Create Meshline mobile interface design and document the local-first MVP boundaries.
 - [x] Define persistent domain models for identity, conversations, messages, and network settings.
@@ -44,30 +43,28 @@
 - [x] Produce a decentralized username-resolution and encrypted relay architecture specification.
 - [x] Implement an opaque development relay and device-side encrypted direct-text proof of concept.
 - [ ] Complete the physical two-device encrypted-text verification with separate installed Meshline clients.
-- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
 - [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
 - [x] Add in-app update checking and user-controlled reload for compatible updates.
 - [ ] Create and install the one-time update-enabled Meshline APK in both Xiaomi Spaces.
 - [x] Add a persistent Telegram-style connection banner to the Meshline chat list.
 - [x] Distinguish offline device, unavailable relay service, and unavailable update service in user-facing diagnostics.
-- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
-- [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
-- [x] Add in-app update checking, release notes, and user-controlled reload for compatible updates.
+- [x] Add in-app checks and user-controlled reload for compatible over-the-air updates.
 - [x] Fix relay account discovery and onboarding feedback for Xiaomi Second Space testing.
 - [x] Clarify the Meshline APK release versus live-development testing workflow.
-- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
-- [x] Design a managed in-app update mechanism for future Meshline APK releases.
-- [x] Add in-app checks and user-controlled reload for compatible over-the-air updates.
-- [ ] Repair low-contrast and invisible text or button states throughout the mobile interface.
-- [ ] Add a user-controlled functional light and dark mode across Meshline.
+- [x] Repair low-contrast and invisible text or button states throughout the mobile interface.
+- [x] Add a user-controlled functional light and dark mode across Meshline.
 - [ ] Stabilize the installed Android build so it cannot alternate between legacy local-only screens and connected Meshline status.
-- [x] Restore a prominent, persistent App updates entry at the top of the Network tab.
+- [x] Restore a prominent, persistent App updates entry in the Network tab.
 - [x] Fix the installed Android build remaining local-only instead of reaching the published Meshline relay and backend.
 - [x] Replace the direct-chat screen’s static local-only fallback notices when relay transport is available.
 - [ ] Fix the installed Android build reporting “Check unavailable” for the Expo OTA update service or release channel.
-- [x] Restore a prominent, persistent App updates entry in the Network tab.
 - [x] Correct the App updates “Ready to check” label when the installation is already current, and deliver the connection banner through the compatible release path.
 - [x] Keep the Meshline connection indicator permanently visible at the top of the Chats page across compatible builds.
-- [ ] Add a persistent light/dark theme switch in settings and repair contrast across sign-in, messaging, and primary action controls.
-- [x] Publish the first authenticated JavaScript-only Meshline update to production-apk and verify its 1.0.2 runtime in Expo.
-- [ ] Confirm the installed Android Meshline app detects, downloads, and restarts into the verified production-apk update.
+- [x] Verify why the installed build reports current while no compatible OTA bundle is visible, then state whether an APK is actually required.
+- [x] Publish matching production-apk JavaScript updates for runtimes 1.0.0 through 1.0.4.
+- [ ] Confirm the installed Android app detects, downloads, and restarts into the verified production-apk update.
+- [ ] Artifact-verify every visible App updates action in the released 1.0.6 APK before requesting any further installation.
+- [ ] Test the exact released Meshline APK in an Android-compatible runtime before requesting another user installation.
+- [ ] Complete fast artifact and component-level verification of the 1.0.6 update action path after the unaccelerated emulator test was stopped.
+- [ ] Push the current Meshline changes to the authorized GitHub repository and verify the remote branch.
