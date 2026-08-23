@@ -82,3 +82,4 @@
 - [x] Publish the saved Chats connection-status change to production-apk for the installed 1.0.7 runtime.
 - [x] Make the direct-message send control clearly visible on the installed Android interface.
 - [x] Diagnose and repair direct-message delivery failures that occur despite a reachable Meshline service.
+- [x] Publish the direct-message visibility and delivery-feedback repair to production-apk for runtime 1.0.7.
