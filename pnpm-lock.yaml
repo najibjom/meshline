@@ -168,10 +168,10 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
       tweetnacl:
-        specifier: ^1.0.3
+        specifier: 1.0.3
         version: 1.0.3
       tweetnacl-util:
-        specifier: ^0.15.1
+        specifier: 0.15.1
         version: 0.15.1
       zod:
         specifier: ^4.2.1

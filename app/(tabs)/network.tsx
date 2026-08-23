@@ -1,5 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 
 import { SectionCard, palette, RowChevron, StatusPill } from "@/components/meshline-ui";
@@ -45,6 +45,12 @@ export default function NetworkScreen() {
           </View>
         </SectionCard>
 
+        <Text style={styles.sectionTitle}>MESHLINE APP</Text>
+        <SectionCard style={styles.updateCard}>
+          <RowChevron icon="system-update-alt" title="App updates" detail="Check and apply compatible releases" onPress={() => router.push("/app-updates" as Href)} tint={palette.indigo} />
+          <Text style={styles.updateHint}>Service connection and app updates are checked separately.</Text>
+        </SectionCard>
+
         <Text style={styles.sectionTitle}>YOUR STORAGE</Text>
         <SectionCard>
           <View style={styles.storageBlock}>
@@ -79,6 +85,8 @@ export default function NetworkScreen() {
 
         <Text style={styles.sectionTitle}>NETWORK DETAILS</Text>
         <SectionCard>
+          <RowChevron icon="lock-outline" title="Encrypted text proof" detail="Two-device opaque relay test" onPress={() => router.push("/transport-lab" as Href)} tint={palette.indigo} />
+          <RowChevron icon="system-update-alt" title="App updates" detail="Check and apply compatible releases" onPress={() => router.push("/app-updates" as Href)} tint={palette.indigo} />
           <RowChevron icon="shield" title="Privacy model" detail="Identity and metadata boundaries" onPress={() => router.push("/security")} tint={palette.emerald} />
           <View style={styles.inlineNote}><MaterialIcons name="info-outline" size={16} color={palette.muted} /><Text style={styles.inlineNoteText}>Meshline will never use your personal message history to fill a contribution limit.</Text></View>
         </SectionCard>
@@ -109,6 +117,8 @@ const styles = StyleSheet.create({
   heroEyebrow: { color: palette.indigo, fontSize: 11, lineHeight: 15, fontWeight: "800", letterSpacing: 0.85 },
   heroTitle: { color: palette.ink, fontSize: 16, lineHeight: 21, fontWeight: "800", marginTop: 1 },
   heroText: { color: palette.muted, fontSize: 13, lineHeight: 18, marginTop: 4 },
+  updateCard: { marginBottom: 18 },
+  updateHint: { color: palette.muted, fontSize: 12, lineHeight: 17, paddingHorizontal: 16, paddingBottom: 14, marginTop: -3 },
   sectionTitle: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginBottom: 8, marginLeft: 4, marginTop: 3 },
   storageBlock: { minHeight: 88, padding: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   storageLabel: { color: palette.muted, fontSize: 13, lineHeight: 17, fontWeight: "600" },

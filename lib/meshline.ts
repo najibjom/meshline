@@ -57,6 +57,7 @@ export type Message = {
   status: DeliveryStatus;
   createdAt: string;
   replyTo?: { id: string; body: string };
+  transportEnvelopeId?: string;
 };
 
 export type NetworkSettings = {
