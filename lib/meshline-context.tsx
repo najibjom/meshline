@@ -3,9 +3,6 @@ import * as Crypto from "expo-crypto";
 import * as LocalAuthentication from "expo-local-authentication";
 import { AppState, Platform } from "react-native";
 
-import { acknowledgeRelayEnvelope, enqueueOpaqueEnvelope, lookupRelayDevice, readRelayInbox, registerRelayDevice } from "@/lib/relay-client";
-import { decryptTextFromDevice, encryptTextForDevice, getOrCreateTransportDeviceKey } from "@/lib/transport";
-
 import {
   changeLocalUsername,
   clearLocalSession,
@@ -96,55 +93,6 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     });
     return () => subscription.remove();
   }, [isAuthenticated, state.privacySettings.biometricLockEnabled]);
-
-  useEffect(() => {
-    if (!ready || !isAuthenticated || !state.identity) return;
-    let active = true;
-    const identity = state.identity;
-
-    const register = async () => {
-      try {
-        const transportKey = await getOrCreateTransportDeviceKey();
-        if (active) await registerRelayDevice(identity.username, transportKey.publicKey);
-      } catch (error) {
-        console.warn("[Meshline relay proof] device registration unavailable", error);
-      }
-    };
-
-    const pull = async () => {
-      try {
-        const [{ envelopes }, transportKey] = await Promise.all([readRelayInbox(identity.username), getOrCreateTransportDeviceKey()]);
-        for (const envelope of envelopes) {
-          try {
-            const body = decryptTextFromDevice(envelope, transportKey.secretKey, envelope.senderPublicKey);
-            const createdAt = envelope.createdAt;
-            setState((current) => {
-              if (Object.values(current.messages).flat().some((message) => message.transportEnvelopeId === envelope.id)) return current;
-              const existingConversation = current.conversations.find((conversation) => conversation.peerUsername === envelope.senderUsername);
-              const conversation = existingConversation ?? { id: Crypto.randomUUID(), peerUsername: envelope.senderUsername, peerDisplayName: envelope.senderUsername.slice(1), createdAt, updatedAt: createdAt };
-              const message: Message = { id: Crypto.randomUUID(), conversationId: conversation.id, body, direction: "inbound", status: "delivered", createdAt, transportEnvelopeId: envelope.id };
-              const next: MeshlineState = {
-                ...current,
-                conversations: existingConversation ? current.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, updatedAt: createdAt } : candidate) : [conversation, ...current.conversations],
-                messages: { ...current.messages, [conversation.id]: [...(current.messages[conversation.id] ?? []), message] },
-              };
-              void persistMeshlineState(next);
-              return next;
-            });
-            await acknowledgeRelayEnvelope(identity.username, envelope.id);
-          } catch (error) {
-            console.warn("[Meshline relay proof] rejected unauthenticated envelope", error);
-          }
-        }
-      } catch {
-        // The relay proof is optional; local-first activity remains available offline.
-      }
-    };
-
-    void register().then(pull);
-    const interval = setInterval(() => { if (AppState.currentState === "active") void pull(); }, 3500);
-    return () => { active = false; clearInterval(interval); };
-  }, [isAuthenticated, ready, state.identity?.deviceId, state.identity?.username]);
 
   const commit = useCallback((recipe: (current: MeshlineState) => MeshlineState) => {
     setState((current) => {
@@ -353,23 +301,8 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     const createdAt = new Date().toISOString();
     const message: Message = { id: Crypto.randomUUID(), conversationId, body, direction: "outbound", status: "sending", createdAt, replyTo };
     commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, updatedAt: createdAt } : conversation), messages: { ...current.messages, [conversationId]: [...(current.messages[conversationId] ?? []), message] } }));
-    const conversation = state.conversations.find((candidate) => candidate.id === conversationId);
-    if (!conversation || conversation.kind) {
-      setTimeout(() => commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) } })), 650);
-      return;
-    }
-
-    try {
-      if (!state.identity) throw new Error("A local identity is required for encrypted relay transport.");
-      const [transportKey, recipient] = await Promise.all([getOrCreateTransportDeviceKey(), lookupRelayDevice(conversation.peerUsername)]);
-      const encrypted = encryptTextForDevice(body, transportKey.secretKey, recipient.publicKey);
-      const envelope = await enqueueOpaqueEnvelope({ recipientUsername: conversation.peerUsername, senderUsername: state.identity.username, senderPublicKey: transportKey.publicKey, ...encrypted });
-      commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered", transportEnvelopeId: envelope.id } : candidate) } }));
-    } catch (error) {
-      console.warn("[Meshline relay proof] text was not accepted by the relay", error);
-      commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "failed" } : candidate) } }));
-    }
-  }, [commit, state.conversations, state.identity]);
+    setTimeout(() => commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) } })), 650);
+  }, [commit]);
 
   const deleteMessage = useCallback(async (conversationId: string, messageId: string) => {
     commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).filter((message) => message.id !== messageId) } }));

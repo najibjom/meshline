@@ -24,8 +24,8 @@ export const OWNER_OPEN_ID = env.ownerId;
 export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
 
-// Installed Android and iOS builds do not have a browser hostname from which to
-// infer an API host. This public deployment is the Meshline relay/backend origin.
+// Installed Android and iOS builds have no browser hostname from which to infer
+// an API origin. This is Meshline's published backend and relay service.
 const DEFAULT_MESHLINE_API_BASE_URL = "https://meshline-bpoqvmax.manus.space";
 
 /**
@@ -49,8 +49,7 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Native builds require an absolute URL; a relative /api path cannot reach the
-  // deployed service from an installed phone.
+  // A relative /api path cannot reach the deployed backend from an installed phone.
   return DEFAULT_MESHLINE_API_BASE_URL;
 }
 

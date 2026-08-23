@@ -71,7 +71,7 @@ export default function ChatScreen() {
           keyExtractor={(message) => message.id}
           contentContainerStyle={styles.messages}
           renderItem={({ item }) => <MessageBubble message={item} onLongPress={() => item.direction !== "system" && setActionMessage(item)} />}
-          ListHeaderComponent={<View style={styles.notice}><MaterialIcons name={isChannel ? "campaign" : isGroup ? "group" : "info-outline"} size={16} color="#75809A" /><Text style={styles.noticeText}>{isChannel ? `${conversation.description || "Local channel"}. Only the creator can post in this local-first channel; encrypted broadcast relays are a future protocol milestone.` : isGroup ? `${conversation.description || "Local group"}. Member identity and encrypted group delivery will be handled by the future network protocol.` : "Experimental encrypted relay delivery is enabled for direct chats. The recipient device must be registered with Meshline; delivery failures are shown on the message. This proof is not production-audited end-to-end encryption."}</Text></View>}
+          ListHeaderComponent={<View style={styles.notice}><MaterialIcons name={isChannel ? "campaign" : isGroup ? "group" : "info-outline"} size={16} color="#75809A" /><Text style={styles.noticeText}>{isChannel ? `${conversation.description || "Local channel"}. Only the creator can post in this local-first channel; encrypted broadcast relays are a future protocol milestone.` : isGroup ? `${conversation.description || "Local group"}. Member identity and encrypted group delivery will be handled by the future network protocol.` : "Experimental encrypted relay delivery is enabled for direct chats. The recipient device must be registered with Meshline; a delivery failure is shown on the message. This proof is not production-audited end-to-end encryption."}</Text></View>}
         />
         {actionMessage ? <View style={styles.actionTray}><View style={styles.actionTrayCopy}><Text numberOfLines={1} style={styles.actionTrayText}>{actionMessage.body}</Text></View><Pressable onPress={() => { setReplyTo(actionMessage); setActionMessage(null); }} style={styles.actionButton}><MaterialIcons name="reply" size={18} color={palette.indigo} /><Text style={styles.actionText}>Reply</Text></Pressable><Pressable onPress={() => void copyMessage()} style={styles.actionButton}><MaterialIcons name="content-copy" size={18} color={palette.indigo} /><Text style={styles.actionText}>Copy</Text></Pressable><Pressable onPress={() => { void deleteMessage(conversation.id, actionMessage.id); setActionMessage(null); haptic.warning(); }} style={styles.actionButton}><MaterialIcons name="delete-outline" size={19} color={palette.coral} /><Text style={[styles.actionText, { color: palette.coral }]}>Delete</Text></Pressable><Pressable onPress={() => setActionMessage(null)} hitSlop={8}><MaterialIcons name="close" size={20} color={palette.muted} /></Pressable></View> : null}
         <View style={styles.composerWrap}>
@@ -89,12 +89,15 @@ function MessageBubble({ message, onLongPress }: { message: Message; onLongPress
     return <View style={styles.system}><Text style={styles.systemText}>{message.body}</Text></View>;
   }
   const outbound = message.direction === "outbound";
+  const failed = message.status === "failed";
+  const deliveryIcon = message.status === "delivered" ? "done-all" : failed ? "error-outline" : "schedule";
+  const deliveryColor = message.status === "delivered" ? "#DDE3FF" : failed ? "#FFD6D9" : "#CDD5FF";
   return (
     <Pressable onLongPress={onLongPress} delayLongPress={260} style={[styles.messageWrap, outbound ? styles.outboundWrap : styles.inboundWrap]}>
       <View style={[styles.bubble, outbound ? styles.outboundBubble : styles.inboundBubble]}>
         {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : styles.inboundReplyPreview]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : styles.inboundReplyText]}>{message.replyTo.body}</Text></View> : null}
         <Text style={[styles.messageBody, outbound ? styles.outboundText : styles.inboundText]}>{message.body}</Text>
-        <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>Not sent</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
+        <View style={styles.messageMeta}>{outbound && failed ? <Text style={styles.failedMeta}>Not sent</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={deliveryIcon} size={14} color={deliveryColor} /> : null}</View>
       </View>
     </Pressable>
   );
@@ -133,7 +136,7 @@ const styles = StyleSheet.create({
   messageMeta: { flexDirection: "row", gap: 4, justifyContent: "flex-end", alignItems: "center", marginTop: 3 },
   messageTime: { fontSize: 10, lineHeight: 14 },
   outboundMeta: { color: "#DDE3FF" },
-  failedMeta: { color: "#FFD3D8", fontSize: 10, lineHeight: 14, fontWeight: "800" },
+  failedMeta: { color: "#FFD6D9", fontSize: 10, lineHeight: 14, fontWeight: "800" },
   inboundMeta: { color: "#98A1B3" },
   system: { alignSelf: "center", maxWidth: "88%", backgroundColor: "#EDF0F6", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 13, marginBottom: 13 },
   systemText: { color: "#667085", fontSize: 12, lineHeight: 17, textAlign: "center" },

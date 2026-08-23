@@ -23,7 +23,7 @@ export function MeshlineConnectionBanner() {
     setServiceReachable(null);
     try {
       const baseUrl = getApiBaseUrl().replace(/\/$/, "");
-      const response = await fetch(`${baseUrl}/api/health`, { method: "GET", headers: { Accept: "application/json" } });
+      const response = await fetch(`${baseUrl}/api/health`, { method: "GET" });
       setServiceReachable(response.ok);
     } catch {
       setServiceReachable(false);
@@ -34,7 +34,7 @@ export function MeshlineConnectionBanner() {
 
   useEffect(() => {
     void probe();
-    const interval = setInterval(() => void probe(), 15_000);
+    const interval = setInterval(() => void probe(), 15000);
     return () => clearInterval(interval);
   }, [probe]);
 

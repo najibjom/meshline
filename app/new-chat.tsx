@@ -7,8 +7,8 @@ import { Avatar, palette, PrimaryButton, SectionCard } from "@/components/meshli
 import { ScreenContainer } from "@/components/screen-container";
 import { normalizeUsername } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
-import { haptic } from "@/lib/haptics";
 import { lookupRelayDevice } from "@/lib/relay-client";
+import { haptic } from "@/lib/haptics";
 
 export default function NewChatScreen() {
   const router = useRouter();
@@ -25,16 +25,15 @@ export default function NewChatScreen() {
       haptic.warning();
       return;
     }
-    setError("");
     setCreating(true);
     try {
       await lookupRelayDevice(normalized);
-      const conversationId = await saveContactAndStartConversation(displayName, username);
+      const conversationId = await saveContactAndStartConversation(displayName, normalized);
       haptic.light();
       router.replace({ pathname: "/chat/[id]", params: { id: conversationId } });
     } catch {
-      setError(`Meshline could not reach a registered device for ${normalized}. Check your connection, then ask this person to open Meshline and wait for “Meshline connected” before trying again.`);
       haptic.warning();
+      setError(`${normalized} is not connected to the encrypted-text proof relay yet. In the other Space, sign in and open Network → Encrypted text proof once, then try again.`);
     } finally {
       setCreating(false);
     }
@@ -45,17 +44,17 @@ export default function NewChatScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
           <View style={styles.header}><Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable><Text style={styles.title}>New contact</Text><View style={styles.back} /></View>
-          <Text style={styles.subtitle}>Find a registered Meshline device by username before opening an experimental private text conversation.</Text>
+          <Text style={styles.subtitle}>Find a person by their Meshline username on the experimental text relay, then start a direct text conversation.</Text>
           <SectionCard style={styles.searchCard}>
             <Text style={styles.label}>DISPLAY NAME</Text>
             <View style={styles.inputWrap}><TextInput value={displayName} onChangeText={setDisplayName} autoCapitalize="words" autoCorrect placeholder="How you know them" placeholderTextColor="#A5ADBC" style={[styles.input, { paddingLeft: 15 }]} returnKeyType="next" /></View>
             <Text style={styles.label}>USERNAME</Text>
             <View style={styles.inputWrap}><Text style={styles.prefix}>@</Text><TextInput value={username.replace(/^@/, "")} onChangeText={(value) => setUsername(value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} autoCapitalize="none" autoCorrect={false} placeholder="username" placeholderTextColor="#A5ADBC" style={styles.input} returnKeyType="done" onSubmitEditing={openChat} /></View>
-            <Text style={styles.hint}>No address, phone number, or contact-book upload is needed.</Text>
+            <Text style={styles.hint}>The other person must sign in and open the encrypted-text proof screen once before their account can be found.</Text>
           </SectionCard>
-          {username ? <View style={styles.preview}><Avatar label={displayName || normalized.slice(1) || "?"} size={52} tone="emerald" /><View style={styles.previewCopy}><Text style={styles.previewName}>{displayName || normalized}</Text><Text style={styles.previewText}>{displayName ? normalized : "Checking for a registered Meshline device"}</Text></View></View> : null}
+          {username ? <View style={styles.preview}><Avatar label={displayName || normalized.slice(1) || "?"} size={52} tone="emerald" /><View style={styles.previewCopy}><Text style={styles.previewName}>{displayName || normalized}</Text><Text style={styles.previewText}>{displayName ? normalized : "Search the experimental encrypted-text relay"}</Text></View></View> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <View style={styles.bottom}><PrimaryButton label={creating ? "Checking Meshline…" : "Start private chat"} onPress={openChat} icon="chat-bubble-outline" disabled={creating || !username} /></View>
+          <View style={styles.bottom}><PrimaryButton label={creating ? "Looking up account…" : "Find and start encrypted chat"} onPress={openChat} icon="chat-bubble-outline" disabled={creating || !username} /></View>
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenContainer>

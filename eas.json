@@ -10,11 +10,6 @@
     "production": {
       "channel": "production",
       "autoIncrement": true
-    },
-    "production-apk": {
-      "distribution": "internal",
-      "channel": "production-apk",
-      "autoIncrement": true
     }
   }
 }
