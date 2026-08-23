@@ -10,7 +10,9 @@ import {
   Identity,
   isValidDisplayName,
   isValidUsername,
+  clearLocalSession,
   loadMeshlineState,
+  loadLocalSession,
   makeIdentity,
   matchesIdentityUsername,
   Message,
@@ -19,6 +21,7 @@ import {
   normalizeDisplayName,
   normalizeUsername,
   persistMeshlineState,
+  persistLocalSession,
   PrivacySettings,
   retainMessagesSince,
   verifyLocalIdentity,
@@ -62,8 +65,9 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
-    void loadMeshlineState().then((stored) => {
+    void Promise.all([loadMeshlineState(), loadLocalSession()]).then(([stored, hasSession]) => {
       setState(stored);
+      setIsAuthenticated(Boolean(stored.identity && hasSession));
       setReady(true);
     });
   }, []);
@@ -88,13 +92,16 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     const next = await makeIdentity(displayName, username, password);
     setState(next);
     setIsAuthenticated(true);
-    await persistMeshlineState(next);
+    await Promise.all([persistMeshlineState(next), persistLocalSession()]);
   }, []);
 
   const loginIdentity = useCallback(async (username: string, password: string) => {
     if (!state.identity || !matchesIdentityUsername(state.identity.username, username)) return false;
     const accepted = await verifyLocalIdentity(username, password);
-    if (accepted) setIsAuthenticated(true);
+    if (accepted) {
+      setIsAuthenticated(true);
+      await persistLocalSession();
+    }
     return accepted;
   }, [state.identity]);
 
@@ -179,7 +186,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   }, []);
 
   const continueWithPassword = useCallback(() => { setAppLocked(false); setIsAuthenticated(false); }, []);
-  const logout = useCallback(() => { setAppLocked(false); setIsAuthenticated(false); }, []);
+  const logout = useCallback(() => { setAppLocked(false); setIsAuthenticated(false); void clearLocalSession(); }, []);
 
   const value = useMemo<MeshlineContextValue>(() => ({
     ready, isAuthenticated, appLocked, state, identity: state.identity, createIdentity, loginIdentity, updateDisplayName, updateProfileDescription, acknowledgeRecovery, startConversation, saveContact, removeContact, toggleConversationPin, sendMessage, deleteMessage, updateNetworkSettings, updatePrivacySettings, unlockWithBiometrics, continueWithPassword, logout, validateDisplayName: isValidDisplayName, validateUsername: isValidUsername,

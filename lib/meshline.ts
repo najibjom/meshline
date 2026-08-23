@@ -67,6 +67,7 @@ const APP_STATE_KEY = "meshline.state.v1";
 const RECOVERY_CODES_KEY = "meshline.recovery-codes.v1";
 const IDENTITY_MARKER_KEY = "meshline.identity-marker.v1";
 const PASSWORD_VERIFIER_KEY = "meshline.password-verifier.v1";
+const AUTH_SESSION_KEY = "meshline.auth-session.v1";
 
 const defaultNetworkSettings: NetworkSettings = {
   storageLimitMb: 1024,
@@ -109,6 +110,18 @@ const secureValueStore = {
     return SecureStore.getItemAsync(key);
   },
 };
+
+export async function loadLocalSession() {
+  return (await secureValueStore.get(AUTH_SESSION_KEY)) === "authenticated";
+}
+
+export async function persistLocalSession() {
+  await secureValueStore.set(AUTH_SESSION_KEY, "authenticated");
+}
+
+export async function clearLocalSession() {
+  await secureValueStore.set(AUTH_SESSION_KEY, "");
+}
 
 export async function loadMeshlineState(): Promise<MeshlineState> {
   const raw = await AsyncStorage.getItem(APP_STATE_KEY);
