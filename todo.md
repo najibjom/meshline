@@ -77,3 +77,4 @@
 - [ ] Identify why the installed 1.0.8 build reports current despite its matching published 1.0.8 OTA record.
 - [x] Publish the corrected visible-control bridge update for the proven installed 1.0.7 runtime without another APK.
 - [x] Push the current Meshline changes to the authorized GitHub repository and verify the remote branch.
+- [ ] Push the finalized verified 1.0.7 visible-updater bridge history to GitHub and verify the saved revision.
