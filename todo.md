@@ -60,8 +60,11 @@
 - [x] Add in-app checks and user-controlled reload for compatible over-the-air updates.
 - [ ] Repair low-contrast and invisible text or button states throughout the mobile interface.
 - [ ] Add a user-controlled functional light and dark mode across Meshline.
+- [ ] Stabilize the installed Android build so it cannot alternate between legacy local-only screens and connected Meshline status.
 - [x] Restore a prominent, persistent App updates entry at the top of the Network tab.
 - [x] Fix the installed Android build remaining local-only instead of reaching the published Meshline relay and backend.
 - [x] Replace the direct-chat screen’s static local-only fallback notices when relay transport is available.
 - [ ] Fix the installed Android build reporting “Check unavailable” for the Expo OTA update service or release channel.
 - [x] Restore a prominent, persistent App updates entry in the Network tab.
+- [x] Correct the App updates “Ready to check” label when the installation is already current, and deliver the connection banner through the compatible release path.
+- [x] Keep the Meshline connection indicator permanently visible at the top of the Chats page across compatible builds.
