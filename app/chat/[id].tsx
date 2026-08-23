@@ -89,16 +89,17 @@ export default function ChatScreen() {
 }
 
 function MessageBubble({ message, isGuide, isSpace, onLongPress }: { message: Message; isGuide: boolean; isSpace: boolean; onLongPress: () => void }) {
+  const colors = useColors();
   if (message.direction === "system") {
-    return <View style={styles.system}><Text style={styles.systemText}>{message.body}</Text></View>;
+    return <View style={[styles.system, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.systemText, { color: colors.muted }]}>{message.body}</Text></View>;
   }
   const outbound = message.direction === "outbound";
   return (
     <Pressable onLongPress={onLongPress} delayLongPress={260} style={[styles.messageWrap, outbound ? styles.outboundWrap : styles.inboundWrap]}>
-      <View style={[styles.bubble, outbound ? styles.outboundBubble : styles.inboundBubble]}>
-        {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : styles.inboundReplyPreview]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : styles.inboundReplyText]}>{message.replyTo.body}</Text></View> : null}
-        {!outbound && isSpace && message.senderUsername ? <Text style={styles.groupSender}>{message.senderUsername}</Text> : null}
-        <Text style={[styles.messageBody, outbound ? styles.outboundText : styles.inboundText]}>{message.body}</Text>
+      <View style={[styles.bubble, outbound ? styles.outboundBubble : [styles.inboundBubble, { backgroundColor: colors.surface, borderColor: colors.border }]]}>
+        {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : [styles.inboundReplyPreview, { backgroundColor: colors.background }]]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : [styles.inboundReplyText, { color: colors.muted }]]}>{message.replyTo.body}</Text></View> : null}
+        {!outbound && isSpace && message.senderUsername ? <Text style={[styles.groupSender, { color: colors.tint }]}>{message.senderUsername}</Text> : null}
+        <Text style={[styles.messageBody, outbound ? styles.outboundText : [styles.inboundText, { color: colors.text }]]}>{message.body}</Text>
         <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>{isGuide ? "Guide only" : message.failureDetail ?? "Not sent"}</Text> : null}{outbound && message.status === "queued" ? <Text style={styles.queuedMeta}>{message.failureDetail ?? "Queued"}</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
       </View>
     </Pressable>
@@ -125,17 +126,17 @@ const styles = StyleSheet.create({
   inboundWrap: { justifyContent: "flex-start" },
   bubble: { maxWidth: "82%", borderRadius: 18, paddingHorizontal: 13, paddingTop: 10, paddingBottom: 7 },
   outboundBubble: { backgroundColor: palette.indigo, borderBottomRightRadius: 5 },
-  inboundBubble: { backgroundColor: "#FFFFFF", borderColor: palette.line, borderWidth: 1, borderBottomLeftRadius: 5 },
+  inboundBubble: { borderWidth: 1, borderBottomLeftRadius: 5 },
   messageBody: { fontSize: 15, lineHeight: 21 },
   outboundText: { color: "#FFFFFF" },
-  inboundText: { color: palette.ink },
-  groupSender: { color: palette.indigo, fontSize: 11, lineHeight: 15, fontWeight: "800", marginBottom: 3 },
+  inboundText: {},
+  groupSender: { fontSize: 11, lineHeight: 15, fontWeight: "800", marginBottom: 3 },
   replyPreview: { borderRadius: 9, paddingHorizontal: 8, paddingVertical: 5, marginBottom: 7 },
   outboundReplyPreview: { backgroundColor: "#5B6FEF" },
-  inboundReplyPreview: { backgroundColor: "#EEF0F5" },
+  inboundReplyPreview: {},
   replyPreviewText: { fontSize: 11, lineHeight: 15 },
   outboundReplyText: { color: "#E6E9FF" },
-  inboundReplyText: { color: "#687387" },
+  inboundReplyText: {},
   messageMeta: { flexDirection: "row", gap: 4, justifyContent: "flex-end", alignItems: "center", marginTop: 3 },
   messageTime: { fontSize: 10, lineHeight: 14 },
   outboundMeta: { color: "#DDE3FF" },

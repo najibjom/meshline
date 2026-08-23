@@ -7,10 +7,12 @@ import { ScreenContainer } from "@/components/screen-container";
 import { calculatePersonalBytes, formatBytesAsMb, storageLimitLabel } from "@/lib/meshline";
 import { useMeshline } from "@/lib/meshline-context";
 import { haptic } from "@/lib/haptics";
+import { useColors } from "@/hooks/use-colors";
 
 export default function NetworkScreen() {
   const router = useRouter();
   const { state, updateNetworkSettings } = useMeshline();
+  const colors = useColors();
   const personalUsage = formatBytesAsMb(calculatePersonalBytes(state.messages));
   const { storageLimitMb, wifiOnly, chargingOnly, mobileDataEnabled } = state.networkSettings;
   const contributionEnabled = storageLimitMb > 0;
@@ -21,7 +23,7 @@ export default function NetworkScreen() {
   };
 
   return (
-    <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
+    <ScreenContainer edges={["top", "left", "right"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -31,64 +33,64 @@ export default function NetworkScreen() {
         showsVerticalScrollIndicator
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Network</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Network</Text>
           <StatusPill icon="info-outline">Prototype mode</StatusPill>
         </View>
-        <Text style={styles.subtitle}>Your phone stays in control of the resources it contributes to Meshline.</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Your phone stays in control of the resources it contributes to Meshline.</Text>
 
         <SectionCard style={styles.heroCard}>
-          <View style={styles.heroIcon}><MaterialIcons name="hub" size={24} color={palette.indigo} /></View>
+          <View style={[styles.heroIcon, { backgroundColor: `${colors.tint}18` }]}><MaterialIcons name="hub" size={24} color={colors.tint} /></View>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroEyebrow}>NODE STATUS</Text>
-            <Text style={styles.heroTitle}>Local identity active</Text>
-            <Text style={styles.heroText}>This build stores your demo activity locally. Live peer discovery and encrypted replication are not connected yet.</Text>
+            <Text style={[styles.heroEyebrow, { color: colors.tint }]}>NETWORK STATUS</Text>
+            <Text style={[styles.heroTitle, { color: colors.text }]}>Experimental relay ready</Text>
+            <Text style={[styles.heroText, { color: colors.muted }]}>Your device keeps its local messages. The encrypted relay proof is available for registered text contacts.</Text>
           </View>
         </SectionCard>
 
-        <Text style={styles.sectionTitle}>MESHLINE APP</Text>
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>MESHLINE APP</Text>
         <SectionCard style={styles.updateCard}>
           <RowChevron icon="system-update-alt" title="App updates" detail="Check and apply compatible releases" onPress={() => router.push("/app-updates" as Href)} tint={palette.indigo} />
-          <Text style={styles.updateHint}>Service connection and app updates are checked separately.</Text>
+          <Text style={[styles.updateHint, { color: colors.muted }]}>Service connection and app updates are checked separately.</Text>
         </SectionCard>
 
-        <Text style={styles.sectionTitle}>YOUR STORAGE</Text>
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>YOUR STORAGE</Text>
         <SectionCard>
           <View style={styles.storageBlock}>
             <View>
-              <Text style={styles.storageLabel}>Personal messages</Text>
-              <Text style={styles.storageValue}>{personalUsage}</Text>
-              <Text style={styles.storageCaption}>Always separate from contribution space</Text>
+              <Text style={[styles.storageLabel, { color: colors.muted }]}>Personal messages</Text>
+              <Text style={[styles.storageValue, { color: colors.text }]}>{personalUsage}</Text>
+              <Text style={[styles.storageCaption, { color: colors.muted }]}>Always separate from contribution space</Text>
             </View>
             <View style={styles.storageIcon}><MaterialIcons name="lock-outline" size={20} color={palette.emerald} /></View>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.storageBlock}>
             <View>
-              <Text style={styles.storageLabel}>Network contribution</Text>
-              <Text style={styles.storageValue}>0 MB / {storageLimitLabel(storageLimitMb)}</Text>
-              <Text style={styles.storageCaption}>{contributionEnabled ? "No network data is assigned in prototype mode" : "Contribution is turned off"}</Text>
+              <Text style={[styles.storageLabel, { color: colors.muted }]}>Network contribution</Text>
+              <Text style={[styles.storageValue, { color: colors.text }]}>0 MB / {storageLimitLabel(storageLimitMb)}</Text>
+              <Text style={[styles.storageCaption, { color: colors.muted }]}>{contributionEnabled ? "No network data is assigned in prototype mode" : "Contribution is turned off"}</Text>
             </View>
             <View style={[styles.storageIcon, { backgroundColor: palette.indigoSoft }]}><MaterialIcons name="storage" size={20} color={palette.indigo} /></View>
           </View>
-          <Pressable onPress={() => router.push("/storage")} style={({ pressed }) => [styles.manageButton, pressed && styles.pressed]}>
-            <Text style={styles.manageText}>Manage contribution</Text>
-            <MaterialIcons name="arrow-forward" size={18} color={palette.indigo} />
+          <Pressable onPress={() => router.push("/storage")} style={({ pressed }) => [styles.manageButton, { backgroundColor: `${colors.tint}18` }, pressed && styles.pressed]}>
+            <Text style={[styles.manageText, { color: colors.tint }]}>Manage contribution</Text>
+            <MaterialIcons name="arrow-forward" size={18} color={colors.tint} />
           </Pressable>
         </SectionCard>
 
-        <Text style={styles.sectionTitle}>RESOURCE GUARDRAILS</Text>
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>RESOURCE GUARDRAILS</Text>
         <SectionCard>
           <PreferenceRow icon="wifi" title="Wi‑Fi only" detail="Avoid mobile data" value={wifiOnly} onChange={(value) => toggle("wifiOnly", value)} />
           <PreferenceRow icon="battery-charging-full" title="Only while charging" detail="Protect battery life" value={chargingOnly} onChange={(value) => toggle("chargingOnly", value)} />
           <PreferenceRow icon="network-cell" title="Mobile data contribution" detail="Disabled by default" value={mobileDataEnabled} onChange={(value) => toggle("mobileDataEnabled", value)} last />
         </SectionCard>
 
-        <Text style={styles.sectionTitle}>NETWORK DETAILS</Text>
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>NETWORK DETAILS</Text>
         <SectionCard>
           <RowChevron icon="lock-outline" title="Encrypted text proof" detail="Two-device opaque relay test" onPress={() => router.push("/transport-lab" as Href)} tint={palette.indigo} />
           <RowChevron icon="system-update-alt" title="App updates" detail="Check and apply compatible releases" onPress={() => router.push("/app-updates" as Href)} tint={palette.indigo} />
           <RowChevron icon="shield" title="Privacy model" detail="Identity and metadata boundaries" onPress={() => router.push("/security")} tint={palette.emerald} />
-          <View style={styles.inlineNote}><MaterialIcons name="info-outline" size={16} color={palette.muted} /><Text style={styles.inlineNoteText}>Meshline will never use your personal message history to fill a contribution limit.</Text></View>
+          <View style={styles.inlineNote}><MaterialIcons name="info-outline" size={16} color={colors.muted} /><Text style={[styles.inlineNoteText, { color: colors.muted }]}>Meshline will never use your personal message history to fill a contribution limit.</Text></View>
         </SectionCard>
       </ScrollView>
     </ScreenContainer>
@@ -96,11 +98,12 @@ export default function NetworkScreen() {
 }
 
 function PreferenceRow({ icon, title, detail, value, onChange, last = false }: { icon: keyof typeof MaterialIcons.glyphMap; title: string; detail: string; value: boolean; onChange: (value: boolean) => void; last?: boolean }) {
+  const colors = useColors();
   return (
-    <View style={[styles.preference, last && { borderBottomWidth: 0 }]}>
-      <View style={styles.preferenceIcon}><MaterialIcons name={icon} size={19} color={palette.indigo} /></View>
-      <View style={styles.preferenceCopy}><Text style={styles.preferenceTitle}>{title}</Text><Text style={styles.preferenceDetail}>{detail}</Text></View>
-      <Switch value={value} onValueChange={onChange} trackColor={{ false: "#DDE2EC", true: "#B8C2FF" }} thumbColor={value ? palette.indigo : "#FFFFFF"} />
+    <View style={[styles.preference, { borderBottomColor: colors.border }, last && { borderBottomWidth: 0 }]}>
+      <View style={[styles.preferenceIcon, { backgroundColor: `${colors.tint}18` }]}><MaterialIcons name={icon} size={19} color={colors.tint} /></View>
+      <View style={styles.preferenceCopy}><Text style={[styles.preferenceTitle, { color: colors.text }]}>{title}</Text><Text style={[styles.preferenceDetail, { color: colors.muted }]}>{detail}</Text></View>
+      <Switch value={value} onValueChange={onChange} trackColor={{ false: colors.border, true: `${colors.tint}99` }} thumbColor={value ? colors.tint : colors.surface} />
     </View>
   );
 }

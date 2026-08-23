@@ -29,8 +29,9 @@ export function MeshlineMark({ size = 42 }: { size?: number }) {
 }
 
 export function Avatar({ label, size = 46, tone = "indigo" }: { label: string; size?: number; tone?: "indigo" | "emerald" | "slate" }) {
-  const background = tone === "emerald" ? palette.emeraldSoft : tone === "slate" ? "#EDF0F6" : palette.indigoSoft;
-  const color = tone === "emerald" ? palette.emerald : tone === "slate" ? palette.muted : palette.indigo;
+  const colors = useColors();
+  const background = tone === "emerald" ? `${colors.success}1C` : tone === "slate" ? colors.background : `${colors.tint}1C`;
+  const color = tone === "emerald" ? colors.success : tone === "slate" ? colors.muted : colors.tint;
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: background }]}>
       <Text style={[styles.avatarText, { fontSize: size * 0.36, color }]}>{label.slice(0, 1).toUpperCase()}</Text>
@@ -39,10 +40,11 @@ export function Avatar({ label, size = 46, tone = "indigo" }: { label: string; s
 }
 
 export function StatusPill({ icon, children, variant = "neutral" }: PropsWithChildren<{ icon: keyof typeof MaterialIcons.glyphMap; variant?: "neutral" | "success" | "warning" }>) {
-  const variantStyle = variant === "success" ? styles.successPill : variant === "warning" ? styles.warningPill : styles.neutralPill;
-  const color = variant === "success" ? palette.emerald : variant === "warning" ? palette.amber : palette.muted;
+  const colors = useColors();
+  const color = variant === "success" ? colors.success : variant === "warning" ? colors.warning : colors.muted;
+  const backgroundColor = variant === "success" ? `${colors.success}1C` : variant === "warning" ? `${colors.warning}1C` : colors.background;
   return (
-    <View style={[styles.pill, variantStyle]}>
+    <View style={[styles.pill, { backgroundColor }]}>
       <MaterialIcons name={icon} size={14} color={color} />
       <Text style={[styles.pillText, { color }]}>{children}</Text>
     </View>
@@ -86,9 +88,6 @@ const styles = StyleSheet.create({
   avatar: { alignItems: "center", justifyContent: "center" },
   avatarText: { fontWeight: "800" },
   pill: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 99, paddingHorizontal: 9, paddingVertical: 5, gap: 5 },
-  neutralPill: { backgroundColor: "#F0F2F7" },
-  successPill: { backgroundColor: palette.emeraldSoft },
-  warningPill: { backgroundColor: palette.amberSoft },
   pillText: { fontSize: 12, lineHeight: 15, fontWeight: "700" },
   card: { backgroundColor: palette.surface, borderColor: palette.line, borderWidth: 1, borderRadius: 22, overflow: "hidden" },
   row: { minHeight: 69, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, borderBottomColor: palette.line, borderBottomWidth: StyleSheet.hairlineWidth },
