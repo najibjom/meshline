@@ -11,6 +11,26 @@ import { useMeshline } from "@/lib/meshline-context";
 import { registerRelayDevice } from "@/lib/relay-client";
 import { getOrCreateTransportDeviceKey } from "@/lib/transport";
 
+const HEALTH_CHECK_ATTEMPTS = 2;
+const HEALTH_RETRY_DELAY_MS = 1_250;
+
+function waitForRetry() {
+  return new Promise<void>((resolve) => setTimeout(resolve, HEALTH_RETRY_DELAY_MS));
+}
+
+async function isMeshlineServiceReachable(baseUrl: string) {
+  for (let attempt = 0; attempt < HEALTH_CHECK_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(`${baseUrl}/api/health`, { method: "GET", headers: { Accept: "application/json", "Cache-Control": "no-cache" } });
+      if (response.ok) return true;
+    } catch {
+      // A fresh deployment can briefly wake before accepting the first request.
+    }
+    if (attempt + 1 < HEALTH_CHECK_ATTEMPTS) await waitForRetry();
+  }
+  return false;
+}
+
 export function MeshlineConnectionBanner() {
   const { identity, isAuthenticated } = useMeshline();
   const network = Network.useNetworkState();
@@ -30,9 +50,9 @@ export function MeshlineConnectionBanner() {
     setRelayDeviceReady(null);
     try {
       const baseUrl = getApiBaseUrl().replace(/\/$/, "");
-      const response = await fetch(`${baseUrl}/api/health`, { method: "GET", headers: { Accept: "application/json" } });
-      setServiceReachable(response.ok);
-      if (!response.ok) return;
+      const reachable = await isMeshlineServiceReachable(baseUrl);
+      setServiceReachable(reachable);
+      if (!reachable) return;
       if (!isAuthenticated || !identity) {
         setRelayDeviceReady(true);
         return;
