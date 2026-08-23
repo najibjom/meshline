@@ -5,6 +5,7 @@ import { AppState, Platform } from "react-native";
 
 import { acknowledgeRelayEnvelope, enqueueOpaqueEnvelope, lookupRelayDevice, readRelayInbox, registerRelayDevice } from "@/lib/relay-client";
 import { decryptTextFromDevice, encryptTextForDevice, getOrCreateTransportDeviceKey } from "@/lib/transport";
+import { describeRelayDeliveryFailure } from "@/lib/delivery-status";
 
 import {
   changeLocalUsername,
@@ -367,7 +368,8 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered", transportEnvelopeId: envelope.id } : candidate) } }));
     } catch (error) {
       console.warn("[Meshline relay proof] text was not accepted by the relay", error);
-      commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "failed" } : candidate) } }));
+      const failureDetail = describeRelayDeliveryFailure(error);
+      commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "failed", failureDetail } : candidate) } }));
     }
   }, [commit, state.conversations, state.identity]);
 

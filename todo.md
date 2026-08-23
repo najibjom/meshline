@@ -80,3 +80,5 @@
 - [x] Push the finalized verified 1.0.7 visible-updater bridge history to GitHub and verify the saved revision.
 - [x] Restore the persistent Telegram-style Meshline connection status at the top of Chats without moving App updates.
 - [x] Publish the saved Chats connection-status change to production-apk for the installed 1.0.7 runtime.
+- [x] Make the direct-message send control clearly visible on the installed Android interface.
+- [x] Diagnose and repair direct-message delivery failures that occur despite a reachable Meshline service.

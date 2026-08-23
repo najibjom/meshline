@@ -33,6 +33,7 @@ export default function ChatScreen() {
   const isGroupOwner = isLocalGroupOwner(conversation, identity);
   const groupPermissions = resolveGroupPermissions(conversation);
   const canPost = isChannel ? isChannelOwner : isGroup ? isGroupOwner || groupPermissions.membersCanPost : true;
+  const canSend = Boolean(draft.trim());
   const memberCount = conversation.memberUsernames?.length ?? 0;
 
   const send = async () => {
@@ -70,13 +71,13 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(message) => message.id}
           contentContainerStyle={styles.messages}
-          renderItem={({ item }) => <MessageBubble message={item} onLongPress={() => item.direction !== "system" && setActionMessage(item)} />}
-          ListHeaderComponent={<View style={styles.notice}><MaterialIcons name={isChannel ? "campaign" : isGroup ? "group" : "info-outline"} size={16} color="#75809A" /><Text style={styles.noticeText}>{isChannel ? `${conversation.description || "Local channel"}. Only the creator can post in this local-first channel; encrypted broadcast relays are a future protocol milestone.` : isGroup ? `${conversation.description || "Local group"}. Member identity and encrypted group delivery will be handled by the future network protocol.` : "Experimental encrypted relay delivery is enabled for direct chats. The recipient device must be registered with Meshline; delivery failures are shown on the message. This proof is not production-audited end-to-end encryption."}</Text></View>}
+          renderItem={({ item }) => <MessageBubble message={item} isGuide={Boolean(conversation.isGuide)} onLongPress={() => item.direction !== "system" && setActionMessage(item)} />}
+          ListHeaderComponent={<View style={styles.notice}><MaterialIcons name={isChannel ? "campaign" : isGroup ? "group" : "info-outline"} size={16} color="#75809A" /><Text style={styles.noticeText}>{isChannel ? `${conversation.description || "Local channel"}. Only the creator can post in this local-first channel; encrypted broadcast relays are a future protocol milestone.` : isGroup ? `${conversation.description || "Local group"}. Member identity and encrypted group delivery will be handled by the future network protocol.` : conversation.isGuide ? "Meshline Guide is an information chat and cannot receive messages. To send a real text, open a contact whose device is registered with Meshline." : "Experimental encrypted relay delivery is enabled for direct chats. The recipient device must be registered with Meshline; delivery failures explain what needs attention. This proof is not production-audited end-to-end encryption."}</Text></View>}
         />
         {actionMessage ? <View style={styles.actionTray}><View style={styles.actionTrayCopy}><Text numberOfLines={1} style={styles.actionTrayText}>{actionMessage.body}</Text></View><Pressable onPress={() => { setReplyTo(actionMessage); setActionMessage(null); }} style={styles.actionButton}><MaterialIcons name="reply" size={18} color={palette.indigo} /><Text style={styles.actionText}>Reply</Text></Pressable><Pressable onPress={() => void copyMessage()} style={styles.actionButton}><MaterialIcons name="content-copy" size={18} color={palette.indigo} /><Text style={styles.actionText}>Copy</Text></Pressable><Pressable onPress={() => { void deleteMessage(conversation.id, actionMessage.id); setActionMessage(null); haptic.warning(); }} style={styles.actionButton}><MaterialIcons name="delete-outline" size={19} color={palette.coral} /><Text style={[styles.actionText, { color: palette.coral }]}>Delete</Text></Pressable><Pressable onPress={() => setActionMessage(null)} hitSlop={8}><MaterialIcons name="close" size={20} color={palette.muted} /></Pressable></View> : null}
         <View style={styles.composerWrap}>
           {replyTo ? <View style={styles.replyBar}><View style={styles.replyLine} /><View style={styles.replyCopy}><Text style={styles.replyLabel}>Replying to</Text><Text numberOfLines={1} style={styles.replyText}>{replyTo.body}</Text></View><Pressable onPress={() => setReplyTo(null)} hitSlop={8}><MaterialIcons name="close" size={18} color={palette.muted} /></Pressable></View> : null}
-          {canPost ? <View style={styles.composer}><TextInput value={draft} onChangeText={setDraft} placeholder={isChannel ? "Publish an update" : "Write a message"} placeholderTextColor="#9099AA" style={styles.composerInput} multiline maxLength={2000} returnKeyType="default" /><Pressable onPress={send} disabled={!draft.trim()} style={({ pressed }) => [styles.send, !draft.trim() && styles.sendDisabled, pressed && draft.trim() && styles.pressed]}><MaterialIcons name="arrow-upward" size={20} color="#FFFFFF" /></Pressable></View> : <View style={styles.readOnlyComposer}><MaterialIcons name={isChannel ? "campaign" : "lock-outline"} size={18} color={palette.muted} /><Text style={styles.readOnlyText}>{isChannel ? "Only the channel owner can post" : "Only group owners can post"}</Text></View>}
+          {canPost && !conversation.isGuide ? <View style={styles.composer}><TextInput value={draft} onChangeText={setDraft} placeholder={isChannel ? "Publish an update" : "Write a message"} placeholderTextColor="#9099AA" style={styles.composerInput} multiline maxLength={2000} returnKeyType="default" /><Pressable onPress={send} disabled={!canSend} accessibilityLabel="Send message" accessibilityState={{ disabled: !canSend }} style={({ pressed }) => [styles.send, !canSend && styles.sendDisabled, pressed && canSend && styles.pressed]}><MaterialIcons name="arrow-upward" size={20} color={canSend ? "#FFFFFF" : palette.indigo} /></Pressable></View> : <View style={styles.readOnlyComposer}><MaterialIcons name={conversation.isGuide ? "info-outline" : isChannel ? "campaign" : "lock-outline"} size={18} color={palette.muted} /><Text style={styles.readOnlyText}>{conversation.isGuide ? "Meshline Guide is read-only" : isChannel ? "Only the channel owner can post" : "Only group owners can post"}</Text></View>}
           <Text style={styles.composerNote}>{isChannel ? "Owner broadcast · Text only" : "Text only · No media in this MVP"}</Text>
         </View>
       </KeyboardAvoidingView>
@@ -84,7 +85,7 @@ export default function ChatScreen() {
   );
 }
 
-function MessageBubble({ message, onLongPress }: { message: Message; onLongPress: () => void }) {
+function MessageBubble({ message, isGuide, onLongPress }: { message: Message; isGuide: boolean; onLongPress: () => void }) {
   if (message.direction === "system") {
     return <View style={styles.system}><Text style={styles.systemText}>{message.body}</Text></View>;
   }
@@ -94,7 +95,7 @@ function MessageBubble({ message, onLongPress }: { message: Message; onLongPress
       <View style={[styles.bubble, outbound ? styles.outboundBubble : styles.inboundBubble]}>
         {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : styles.inboundReplyPreview]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : styles.inboundReplyText]}>{message.replyTo.body}</Text></View> : null}
         <Text style={[styles.messageBody, outbound ? styles.outboundText : styles.inboundText]}>{message.body}</Text>
-        <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>Not sent</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
+        <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>{isGuide ? "Guide only" : message.failureDetail ?? "Not sent"}</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
       </View>
     </Pressable>
   );
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
   readOnlyText: { color: palette.muted, fontSize: 13, lineHeight: 18, fontWeight: "700" },
   composerInput: { flex: 1, minHeight: 38, maxHeight: 96, color: palette.ink, fontSize: 16, lineHeight: 21, paddingTop: 9, paddingBottom: 6 },
   send: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: palette.indigo, marginLeft: 5 },
-  sendDisabled: { backgroundColor: "#BFC6D6" },
+  sendDisabled: { backgroundColor: "#E7EBF3", borderColor: "#C5CDDA", borderWidth: 1 },
   composerNote: { color: "#98A1B3", textAlign: "center", fontSize: 10, lineHeight: 14, marginTop: 5 },
   missing: { color: palette.ink, fontSize: 16, fontWeight: "700" },
   returnButton: { marginTop: 14, backgroundColor: palette.indigoSoft, paddingHorizontal: 15, paddingVertical: 10, borderRadius: 12 },

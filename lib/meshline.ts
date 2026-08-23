@@ -58,6 +58,7 @@ export type Message = {
   createdAt: string;
   replyTo?: { id: string; body: string };
   transportEnvelopeId?: string;
+  failureDetail?: string;
 };
 
 export type NetworkSettings = {
