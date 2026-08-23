@@ -101,6 +101,7 @@
 - [x] Design durable relay device-registration and encrypted-inbox records with explicit retention and acknowledgement rules.
 - [x] Replace the temporary in-memory relay directory and inbox with durable database-backed storage.
 - [ ] Preserve encrypted offline message delivery across relay restarts and client relaunches.
+- [x] Verify production durable relay registration, lookup, synthetic opaque enqueue, inbox read, and recipient acknowledgement with no user content.
 - [x] Publish the durable relay and offline-delivery client updates to production-apk for runtime 1.0.7.
 - [ ] Refine the text-only Meshline mobile design across primary chat, conversation, network, and profile flows.
 - [ ] Strengthen the experimental encrypted transport with robust device trust, key lifecycle, and replay-safety foundations.
