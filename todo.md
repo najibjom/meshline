@@ -69,5 +69,8 @@
 - [ ] Complete fast artifact and component-level verification of the 1.0.6 update action path after the unaccelerated emulator test was stopped.
 - [x] Repair the missing App updates action control and prepare a package-verified test APK for device testing.
 - [x] Produce the final Meshline 1.0.7 base APK with a visible update action and an explicitly matched 1.0.7 OTA/service compatibility contract.
-- [ ] Generate the final 1.0.7 Android test APK from this verified base and confirm its exact packaged action labels.
+- [x] Generate the final 1.0.7 Android test APK from this verified base and confirm its exact packaged action labels.
+- [x] Fix the 1.0.7 Android App updates action background because it currently renders transparent behind white text.
+- [x] Produce the corrected final Meshline 1.0.8 base APK with an opaque native update action and matched 1.0.8 OTA/service compatibility.
+- [ ] Generate the final 1.0.8 Android test APK from the verified contrast-safe base and verify its package metadata.
 - [x] Push the current Meshline changes to the authorized GitHub repository and verify the remote branch.

@@ -2,7 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Network from "expo-network";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { SectionCard, palette, StatusPill } from "@/components/meshline-ui";
@@ -15,7 +15,7 @@ import {
 } from "@/lib/ota-updates";
 import { haptic } from "@/lib/haptics";
 
-const MESHLINE_BASE_RUNTIME = "1.0.7";
+const MESHLINE_BASE_RUNTIME = "1.0.8";
 
 function label(state: OtaUpdateState) {
   if (state === "error") return "Check unavailable";
@@ -142,17 +142,18 @@ export default function AppUpdatesScreen() {
           </View>
         </SectionCard>
 
-        <Pressable
+        <TouchableOpacity
           testID="meshline-update-action"
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
           disabled={working}
           onPress={() => void action()}
-          style={({ pressed }) => [styles.updateAction, working && styles.updateActionDisabled, pressed && !working && styles.updateActionPressed]}
+          activeOpacity={0.84}
+          style={[styles.updateAction, working && styles.updateActionDisabled]}
         >
           <MaterialIcons name={actionIcon} size={21} color="#FFFFFF" />
           <Text style={styles.updateActionLabel}>{actionLabel}</Text>
-        </Pressable>
+        </TouchableOpacity>
 
         <Text style={styles.compatibility}>Base version {MESHLINE_BASE_RUNTIME} · production updates enabled</Text>
       </ScrollView>
@@ -179,6 +180,5 @@ const styles = StyleSheet.create({
   updateAction: { minHeight: 58, marginTop: 16, borderRadius: 17, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center", gap: 9, flexDirection: "row", paddingHorizontal: 20, shadowColor: palette.indigo, shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
   updateActionLabel: { color: "#FFFFFF", fontSize: 16, lineHeight: 21, fontWeight: "800" },
   updateActionDisabled: { opacity: 0.58 },
-  updateActionPressed: { transform: [{ scale: 0.98 }], opacity: 0.92 },
   compatibility: { textAlign: "center", color: "#7B8494", fontSize: 12, lineHeight: 17, marginTop: 12 },
 });
