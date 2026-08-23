@@ -4,7 +4,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { AppState, Platform } from "react-native";
 
 import { acknowledgeRelayEnvelope, enqueueOpaqueEnvelope, lookupRelayDevice, readRelayInbox, registerRelayDevice } from "@/lib/relay-client";
-import { decodeSpaceRelayPayload, encodeSpaceRelayPayload } from "@/lib/space-relay-payload";
+import { decodeSpaceRelayPayload, encodeSpaceRelayPayload, encodeSpaceRelaySyncPayload } from "@/lib/space-relay-payload";
 import { decryptTextFromDevice, encryptTextForDevice, getOrCreateTransportDeviceKey, transportFingerprint } from "@/lib/transport";
 import { describeRelayDeliveryFailure } from "@/lib/delivery-status";
 
@@ -135,11 +135,22 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
               const existingConversation = spacePayload
                 ? observed.state.conversations.find((conversation) => conversation.id === spacePayload.space.id)
                 : observed.state.conversations.find((conversation) => conversation.peerUsername === envelope.senderUsername);
+              const canApplySpaceSnapshot = Boolean(spacePayload && envelope.senderUsername === spacePayload.space.createdBy && (!existingConversation || existingConversation.createdBy === spacePayload.space.createdBy));
+              if (spacePayload && !existingConversation && !canApplySpaceSnapshot) throw new Error("Rejected a first-time space envelope that was not sent by its recorded owner.");
+              if (spacePayload?.type === "meshline-space-sync" && !canApplySpaceSnapshot) throw new Error("Rejected a space settings update that was not sent by the recorded owner.");
+              const incomingSpaceUpdatedAt = spacePayload?.type === "meshline-space-sync" ? spacePayload.updatedAt : spacePayload?.spaceUpdatedAt ?? createdAt;
+              const isStaleSpaceSnapshot = Boolean(existingConversation && canApplySpaceSnapshot && Date.parse(incomingSpaceUpdatedAt) < Date.parse(existingConversation.spaceUpdatedAt ?? existingConversation.createdAt));
+              if (spacePayload?.type === "meshline-space-sync" && isStaleSpaceSnapshot) {
+                void acknowledgeRelayEnvelope(identity.username, envelope.id).catch((error) => console.warn("[Meshline relay proof] acknowledgement retry failed", error));
+                return current;
+              }
               const conversation = existingConversation ?? (spacePayload
-                ? { ...spacePayload.space, createdAt, updatedAt: createdAt }
+                ? { ...spacePayload.space, createdAt, updatedAt: createdAt, spaceUpdatedAt: incomingSpaceUpdatedAt }
                 : { id: Crypto.randomUUID(), peerUsername: envelope.senderUsername, peerDisplayName: envelope.senderUsername.slice(1), createdAt, updatedAt: createdAt });
-              const message: Message = spacePayload
+              const message: Message = spacePayload?.type === "meshline-space-message"
                 ? { id: spacePayload.message.id, conversationId: conversation.id, body: spacePayload.message.body, replyTo: spacePayload.message.replyTo, direction: "inbound", senderUsername: envelope.senderUsername, status: "delivered", createdAt: spacePayload.message.createdAt, transportEnvelopeId: envelope.id }
+                : spacePayload
+                  ? { id: `space-sync-${spacePayload.updatedAt}`, conversationId: conversation.id, body: `The owner synchronized ${conversation.kind === "channel" ? "channel" : "group"} details, members, or posting permissions.`, direction: "system", status: "local", createdAt: spacePayload.updatedAt, transportEnvelopeId: envelope.id }
                 : { id: Crypto.randomUUID(), conversationId: conversation.id, body, direction: "inbound", senderUsername: envelope.senderUsername, status: "delivered", createdAt, transportEnvelopeId: envelope.id };
               const keyNotice: Message | null = observed.keyChanged ? {
                 id: Crypto.randomUUID(),
@@ -151,7 +162,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
               } : null;
               const next: MeshlineState = {
                 ...observed.state,
-                conversations: existingConversation ? observed.state.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, ...(spacePayload?.space ?? {}), updatedAt: createdAt } : candidate) : [conversation, ...observed.state.conversations],
+                conversations: existingConversation ? observed.state.conversations.map((candidate) => candidate.id === conversation.id ? { ...candidate, ...(canApplySpaceSnapshot && !isStaleSpaceSnapshot ? { ...(spacePayload?.space ?? {}), spaceUpdatedAt: incomingSpaceUpdatedAt } : {}), updatedAt: createdAt } : candidate) : [conversation, ...observed.state.conversations],
                 messages: { ...observed.state.messages, [conversation.id]: [...(observed.state.messages[conversation.id] ?? []), message, ...(keyNotice ? [keyNotice] : [])] },
               };
               void persistMeshlineState(next)
@@ -180,6 +191,30 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       return next;
     });
   }, []);
+
+  const relaySpaceSnapshot = useCallback(async (space: Conversation, previousMemberUsernames: string[] = []) => {
+    if (!state.identity) return { accepted: 0, total: 0 };
+    const recipients = Array.from(new Set([...previousMemberUsernames, ...(space.memberUsernames ?? [])]))
+      .filter((username) => username !== state.identity!.username);
+    if (!recipients.length) return { accepted: 0, total: 0 };
+    const transportKey = await getOrCreateTransportDeviceKey();
+    const wirePayload = encodeSpaceRelaySyncPayload(space);
+    const results = await Promise.allSettled(recipients.map(async (recipientUsername) => {
+      const recipient = await lookupRelayDevice(recipientUsername);
+      const encrypted = encryptTextForDevice(wirePayload, transportKey.secretKey, recipient.publicKey);
+      return enqueueOpaqueEnvelope({ recipientUsername, senderUsername: state.identity!.username, senderPublicKey: transportKey.publicKey, ...encrypted });
+    }));
+    return { accepted: results.filter((result) => result.status === "fulfilled").length, total: recipients.length };
+  }, [state.identity]);
+
+  const recordSpaceSyncResult = useCallback((conversationId: string, result: { accepted: number; total: number }) => {
+    if (!result.total) return;
+    const createdAt = new Date().toISOString();
+    const body = result.accepted === result.total
+      ? `Space settings were queued for ${result.accepted} registered member${result.accepted === 1 ? "" : "s"}.`
+      : `Space settings were queued for ${result.accepted} of ${result.total} registered members. Members without a registered device will receive the latest settings after a later owner update.`;
+    commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: [...(current.messages[conversationId] ?? []), { id: Crypto.randomUUID(), conversationId, body, direction: "system", status: "local", createdAt }] } }));
+  }, [commit]);
 
   const createIdentity = useCallback(async (displayName: string, username: string, password: string) => {
     const next = ensureSavedMessagesConversation(await makeIdentity(displayName, username, password));
@@ -285,6 +320,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       peerDisplayName: title,
       createdAt,
       updatedAt: createdAt,
+      spaceUpdatedAt: createdAt,
       kind,
       description,
       memberUsernames: members,
@@ -317,14 +353,16 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     if (!state.identity || !channel || !isLocalChannelOwner(channel, state.identity) || !title || !isValidUsername(username) || usernameTaken) return false;
 
     const updatedAt = new Date().toISOString();
+    const updatedChannel = { ...channel, peerDisplayName: title, peerUsername: username, description, updatedAt, spaceUpdatedAt: updatedAt };
     commit((current) => ({
       ...current,
       conversations: current.conversations.map((conversation) => conversation.id === conversationId
-        ? { ...conversation, peerDisplayName: title, peerUsername: username, description, updatedAt }
+        ? updatedChannel
         : conversation),
     }));
+    try { recordSpaceSyncResult(conversationId, await relaySpaceSnapshot(updatedChannel)); } catch { recordSpaceSyncResult(conversationId, { accepted: 0, total: (updatedChannel.memberUsernames ?? []).filter((member) => member !== state.identity?.username).length }); }
     return true;
-  }, [commit, state.conversations, state.identity]);
+  }, [commit, recordSpaceSyncResult, relaySpaceSnapshot, state.conversations, state.identity]);
 
   const updateGroupDetails = useCallback(async (conversationId: string, titleInput: string, usernameInput: string, descriptionInput: string) => {
     const title = normalizeDisplayName(titleInput).slice(0, 60);
@@ -336,14 +374,16 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     if (!state.identity || !group || !isLocalGroupOwner(group, state.identity) || !title || !isValidUsername(username) || usernameTaken) return false;
 
     const updatedAt = new Date().toISOString();
+    const updatedGroup = { ...group, peerDisplayName: title, peerUsername: username, description, updatedAt, spaceUpdatedAt: updatedAt };
     commit((current) => ({
       ...current,
       conversations: current.conversations.map((conversation) => conversation.id === conversationId
-        ? { ...conversation, peerDisplayName: title, peerUsername: username, description, updatedAt }
+        ? updatedGroup
         : conversation),
     }));
+    try { recordSpaceSyncResult(conversationId, await relaySpaceSnapshot(updatedGroup)); } catch { recordSpaceSyncResult(conversationId, { accepted: 0, total: (updatedGroup.memberUsernames ?? []).filter((member) => member !== state.identity?.username).length }); }
     return true;
-  }, [commit, state.conversations, state.identity]);
+  }, [commit, recordSpaceSyncResult, relaySpaceSnapshot, state.conversations, state.identity]);
 
   const updateSpaceMembers = useCallback(async (conversationId: string, memberUsernames: string[]) => {
     const space = state.conversations.find((conversation) => conversation.id === conversationId);
@@ -351,25 +391,31 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     if (!space || !state.identity || !canManage) return false;
 
     const members = Array.from(new Set([state.identity.username, ...memberUsernames.map(normalizeUsername).filter(isValidUsername)]));
+    const updatedAt = new Date().toISOString();
+    const updatedSpace = { ...space, memberUsernames: members, updatedAt, spaceUpdatedAt: updatedAt };
     commit((current) => ({
       ...current,
-      conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, memberUsernames: members } : conversation),
+      conversations: current.conversations.map((conversation) => conversation.id === conversationId ? updatedSpace : conversation),
     }));
+    try { recordSpaceSyncResult(conversationId, await relaySpaceSnapshot(updatedSpace, space.memberUsernames)); } catch { recordSpaceSyncResult(conversationId, { accepted: 0, total: Array.from(new Set([...(space.memberUsernames ?? []), ...members])).filter((member) => member !== state.identity?.username).length }); }
     return true;
-  }, [commit, state.conversations, state.identity]);
+  }, [commit, recordSpaceSyncResult, relaySpaceSnapshot, state.conversations, state.identity]);
 
   const updateGroupPermissions = useCallback(async (conversationId: string, permissions: Partial<GroupPermissions>) => {
     const group = state.conversations.find((conversation) => conversation.id === conversationId);
     if (!state.identity || !group || !isLocalGroupOwner(group, state.identity)) return false;
 
+    const updatedAt = new Date().toISOString();
+    const updatedGroup = { ...group, groupPermissions: { membersCanPost: group.groupPermissions?.membersCanPost ?? true, membersCanInvite: group.groupPermissions?.membersCanInvite ?? true, ...permissions }, updatedAt, spaceUpdatedAt: updatedAt };
     commit((current) => ({
       ...current,
       conversations: current.conversations.map((conversation) => conversation.id === conversationId
-        ? { ...conversation, groupPermissions: { membersCanPost: conversation.groupPermissions?.membersCanPost ?? true, membersCanInvite: conversation.groupPermissions?.membersCanInvite ?? true, ...permissions } }
+        ? updatedGroup
         : conversation),
     }));
+    try { recordSpaceSyncResult(conversationId, await relaySpaceSnapshot(updatedGroup)); } catch { recordSpaceSyncResult(conversationId, { accepted: 0, total: (updatedGroup.memberUsernames ?? []).filter((member) => member !== state.identity?.username).length }); }
     return true;
-  }, [commit, state.conversations, state.identity]);
+  }, [commit, recordSpaceSyncResult, relaySpaceSnapshot, state.conversations, state.identity]);
 
   const toggleConversationPin = useCallback(async (conversationId: string) => {
     commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, isPinned: !conversation.isPinned } : conversation) }));
@@ -390,6 +436,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     try {
       if (!state.identity) throw new Error("A local identity is required for encrypted relay transport.");
       if (conversation.kind) {
+        if (!(conversation.memberUsernames ?? []).includes(state.identity.username)) throw new Error("You are no longer a member of this space.");
         const recipients = (conversation.memberUsernames ?? []).filter((username) => username !== state.identity?.username);
         if (!recipients.length) {
           commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) } }));

@@ -109,4 +109,6 @@
 - [x] Add experimental encrypted per-member fanout for text-only group and channel messages across registered devices.
 - [x] Publish device-trust notices and experimental cross-device space fanout to production-apk for runtime 1.0.7.
 - [ ] Synchronize space invitations, membership edits, and owner setting changes before the next space message is sent.
+- [x] Send validated owner-authorized encrypted snapshots for group/channel title, description, membership, and group-permission changes to registered members.
+- [ ] Physically verify a group/channel owner change and member removal on two installed runtime-1.0.7 clients.
 - [ ] Add reliable messaging observability, offline-safe delivery states, unread indicators, and recovery behavior.
