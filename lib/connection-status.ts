@@ -9,13 +9,13 @@ export type MeshlineConnectionPresentation = {
 export function describeMeshlineConnection(kind: MeshlineConnectionKind): MeshlineConnectionPresentation {
   switch (kind) {
     case "offline":
-      return { label: "No internet connection", detail: "Connect to Wi‑Fi or mobile data to reach Meshline.", icon: "wifi-off" };
+      return { label: "No internet connection", detail: "Connect to Wi-Fi or mobile data to reach Meshline.", icon: "wifi-off" };
     case "connected":
-      return { label: "Meshline connected", detail: "The Meshline service is reachable.", icon: "cloud-done" };
+      return { label: "Meshline connected", detail: "Internet and the Meshline service are reachable.", icon: "cloud-done" };
     case "service-unavailable":
-      return { label: "Meshline service unavailable", detail: "Your internet is working, but Meshline is not responding yet. Tap to retry.", icon: "cloud-off" };
+      return { label: "Meshline service unavailable", detail: "Your internet is working, but the Meshline relay or service cannot be reached. Tap to retry.", icon: "cloud-off" };
     default:
-      return { label: "Connecting to Meshline…", detail: "Checking your internet and Meshline service connection.", icon: "sync" };
+      return { label: "Connecting to Meshline…", detail: "Checking your internet connection and Meshline service.", icon: "sync" };
   }
 }
 

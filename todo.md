@@ -44,7 +44,24 @@
 - [x] Produce a decentralized username-resolution and encrypted relay architecture specification.
 - [x] Implement an opaque development relay and device-side encrypted direct-text proof of concept.
 - [ ] Complete the physical two-device encrypted-text verification with separate installed Meshline clients.
-- [x] Configure a dedicated production APK Expo OTA channel and identify APKs without an embedded update channel.
-- [ ] Build and install one update-enabled Meshline APK with the production-apk OTA channel in both Xiaomi Spaces.
+- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
+- [x] Add in-app update checking and user-controlled reload for compatible updates.
+- [ ] Create and install the one-time update-enabled Meshline APK in both Xiaomi Spaces.
+- [x] Add a persistent Telegram-style connection banner to the Meshline chat list.
+- [x] Distinguish offline device, unavailable relay service, and unavailable update service in user-facing diagnostics.
+- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
+- [x] Add in-app update checking, release notes, and user-controlled reload for compatible updates.
+- [x] Fix relay account discovery and onboarding feedback for Xiaomi Second Space testing.
+- [x] Clarify the Meshline APK release versus live-development testing workflow.
+- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Design a managed in-app update mechanism for future Meshline APK releases.
+- [x] Add in-app checks and user-controlled reload for compatible over-the-air updates.
 - [ ] Repair low-contrast and invisible text or button states throughout the mobile interface.
 - [ ] Add a user-controlled functional light and dark mode across Meshline.
+- [x] Restore a prominent, persistent App updates entry at the top of the Network tab.
+- [x] Fix the installed Android build remaining local-only instead of reaching the published Meshline relay and backend.
+- [x] Replace the direct-chat screen’s static local-only fallback notices when relay transport is available.
+- [ ] Fix the installed Android build reporting “Check unavailable” for the Expo OTA update service or release channel.
+- [x] Restore a prominent, persistent App updates entry in the Network tab.
