@@ -44,3 +44,15 @@
 - [x] Produce a decentralized username-resolution and encrypted relay architecture specification.
 - [x] Implement an opaque development relay and device-side encrypted direct-text proof of concept.
 - [ ] Complete the physical two-device encrypted-text verification with separate installed Meshline clients.
+- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
+- [x] Add in-app update checking and user-controlled reload for compatible updates.
+- [ ] Create and install the one-time update-enabled Meshline APK in both Xiaomi Spaces.
+- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Configure compatible over-the-air updates for Meshline’s installed Android releases.
+- [x] Add in-app update checking, release notes, and user-controlled reload for compatible updates.
+- [x] Fix relay account discovery and onboarding feedback for Xiaomi Second Space testing.
+- [x] Clarify the Meshline APK release versus live-development testing workflow.
+- [ ] Improve mobile contrast and sizing for primary actions, including Log in, Create account, and Send.
+- [x] Design a managed in-app update mechanism for future Meshline APK releases.
+- [x] Add in-app checks and user-controlled reload for compatible over-the-air updates.

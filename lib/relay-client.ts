@@ -1,21 +1,7 @@
 import { apiCall } from "@/lib/_core/api";
 
-export type RelayDeviceRecord = {
-  username: string;
-  publicKey: string;
-  registeredAt: string;
-};
-
-export type OpaqueRelayEnvelope = {
-  id: string;
-  recipientUsername: string;
-  senderUsername: string;
-  senderPublicKey: string;
-  nonce: string;
-  ciphertext: string;
-  createdAt: string;
-  expiresAt: string;
-};
+export type RelayDeviceRecord = { username: string; publicKey: string; registeredAt: string };
+export type OpaqueRelayEnvelope = { id: string; recipientUsername: string; senderUsername: string; senderPublicKey: string; nonce: string; ciphertext: string; createdAt: string; expiresAt: string };
 
 export async function registerRelayDevice(username: string, publicKey: string) {
   return apiCall<RelayDeviceRecord>("/api/relay/register", { method: "POST", body: JSON.stringify({ username, publicKey }) });

@@ -1,5 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 
 import { SectionCard, palette, RowChevron, StatusPill } from "@/components/meshline-ui";
@@ -79,6 +79,8 @@ export default function NetworkScreen() {
 
         <Text style={styles.sectionTitle}>NETWORK DETAILS</Text>
         <SectionCard>
+          <RowChevron icon="lock-outline" title="Encrypted text proof" detail="Two-device opaque relay test" onPress={() => router.push("/transport-lab" as Href)} tint={palette.indigo} />
+          <RowChevron icon="system-update-alt" title="App updates" detail="Check and apply compatible releases" onPress={() => router.push("/app-updates" as Href)} tint={palette.indigo} />
           <RowChevron icon="shield" title="Privacy model" detail="Identity and metadata boundaries" onPress={() => router.push("/security")} tint={palette.emerald} />
           <View style={styles.inlineNote}><MaterialIcons name="info-outline" size={16} color={palette.muted} /><Text style={styles.inlineNoteText}>Meshline will never use your personal message history to fill a contribution limit.</Text></View>
         </SectionCard>

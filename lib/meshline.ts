@@ -3,7 +3,7 @@ import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-export type DeliveryStatus = "sending" | "delivered" | "local";
+export type DeliveryStatus = "sending" | "delivered" | "local" | "failed";
 export type MessageDirection = "outbound" | "inbound" | "system";
 export type ConversationKind = "direct" | "group" | "channel";
 
@@ -57,6 +57,7 @@ export type Message = {
   status: DeliveryStatus;
   createdAt: string;
   replyTo?: { id: string; body: string };
+  transportEnvelopeId?: string;
 };
 
 export type NetworkSettings = {

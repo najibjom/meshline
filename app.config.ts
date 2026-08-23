@@ -42,11 +42,24 @@ const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
   version: "1.0.0",
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/a2b75432-bb1d-49ce-825d-3aa7de794ca5",
+    checkAutomatically: "NEVER",
+    fallbackToCacheTimeout: 0,
+  },
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
+  extra: {
+    eas: {
+      projectId: "a2b75432-bb1d-49ce-825d-3aa7de794ca5",
+    },
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
@@ -86,6 +99,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    "expo-updates",
     [
       "expo-local-authentication",
       {
