@@ -125,6 +125,10 @@ export function isValidDisplayName(value: string) {
   return name.length >= 2 && name.length <= 40;
 }
 
+export function matchesIdentityUsername(storedUsername: string, usernameInput: string) {
+  return storedUsername === normalizeUsername(usernameInput);
+}
+
 function codeFromUuid() {
   return Crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
 }
@@ -177,6 +181,20 @@ export async function makeIdentity(displayNameInput: string, usernameInput: stri
     messages: { [guideConversation.id]: [guideMessage] },
     networkSettings: defaultNetworkSettings,
   };
+}
+
+export async function verifyLocalIdentity(usernameInput: string, password: string) {
+  const [deviceMarker, storedVerifier] = await Promise.all([
+    secureValueStore.get(IDENTITY_MARKER_KEY),
+    secureValueStore.get(PASSWORD_VERIFIER_KEY),
+  ]);
+  if (!deviceMarker || !storedVerifier) return false;
+
+  const candidate = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA512,
+    `${deviceMarker}:${normalizeUsername(usernameInput)}:${password}`,
+  );
+  return candidate === storedVerifier;
 }
 
 export async function getRecoveryCodes() {

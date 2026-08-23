@@ -14,12 +14,16 @@ import {
   NetworkSettings,
   normalizeUsername,
   persistMeshlineState,
+  matchesIdentityUsername,
+  verifyLocalIdentity,
 } from "@/lib/meshline";
 
 type MeshlineContextValue = {
   ready: boolean;
+  isAuthenticated: boolean;
   state: MeshlineState;
   createIdentity: (displayName: string, username: string, password: string) => Promise<void>;
+  loginIdentity: (username: string, password: string) => Promise<boolean>;
   updateDisplayName: (displayName: string) => Promise<void>;
   acknowledgeRecovery: () => Promise<void>;
   startConversation: (username: string) => Promise<string>;
@@ -34,6 +38,7 @@ const MeshlineContext = createContext<MeshlineContextValue | null>(null);
 
 export function MeshlineProvider({ children }: PropsWithChildren) {
   const [ready, setReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [state, setState] = useState<MeshlineState>(emptyMeshlineState);
 
   useEffect(() => {
@@ -54,8 +59,16 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   const createIdentity = useCallback(async (displayName: string, username: string, password: string) => {
     const next = await makeIdentity(displayName, username, password);
     setState(next);
+    setIsAuthenticated(true);
     await persistMeshlineState(next);
   }, []);
+
+  const loginIdentity = useCallback(async (username: string, password: string) => {
+    if (!state.identity || !matchesIdentityUsername(state.identity.username, username)) return false;
+    const accepted = await verifyLocalIdentity(username, password);
+    if (accepted) setIsAuthenticated(true);
+    return accepted;
+  }, [state.identity]);
 
   const acknowledgeRecovery = useCallback(async () => {
     commit((current) => ({
@@ -142,8 +155,10 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<MeshlineContextValue>(() => ({
     ready,
+    isAuthenticated,
     state,
     createIdentity,
+    loginIdentity,
     updateDisplayName,
     acknowledgeRecovery,
     startConversation,
@@ -152,7 +167,7 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     identity: state.identity,
     validateDisplayName: isValidDisplayName,
     validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, createIdentity, ready, sendMessage, startConversation, state, updateDisplayName, updateNetworkSettings]);
+  }), [acknowledgeRecovery, createIdentity, isAuthenticated, loginIdentity, ready, sendMessage, startConversation, state, updateDisplayName, updateNetworkSettings]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }

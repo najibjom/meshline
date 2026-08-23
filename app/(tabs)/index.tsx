@@ -10,19 +10,19 @@ import { useMeshline } from "@/lib/meshline-context";
 
 export default function ChatsScreen() {
   const router = useRouter();
-  const { ready, identity, state } = useMeshline();
+  const { ready, identity, isAuthenticated, state } = useMeshline();
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (ready && !identity) router.replace("/onboarding");
-    if (ready && identity && !identity.recoveryAcknowledged) router.replace("/recovery");
-  }, [identity, ready, router]);
+    if (ready && (!identity || !isAuthenticated)) router.replace("/welcome");
+    if (ready && identity && isAuthenticated && !identity.recoveryAcknowledged) router.replace("/recovery");
+  }, [identity, isAuthenticated, ready, router]);
 
   const filteredConversations = useMemo(() => state.conversations
     .filter((conversation) => `${conversation.peerDisplayName} ${conversation.peerUsername}`.toLowerCase().includes(query.toLowerCase()))
     .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()), [query, state.conversations]);
 
-  if (!ready || !identity) {
+  if (!ready || !identity || !isAuthenticated) {
     return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
   }
 
@@ -38,7 +38,7 @@ export default function ChatsScreen() {
               <View style={styles.brandRow}>
                 <MeshlineMark size={38} />
                 <View style={styles.brandCopy}>
-                  <Text style={styles.brand}>Meshline</Text>
+                  <Text style={styles.brand}>{identity.displayName}</Text>
                   <Text style={styles.username}>{identity.username}</Text>
                 </View>
               </View>

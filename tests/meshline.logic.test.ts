@@ -22,6 +22,7 @@ import {
   emptyMeshlineState,
   isValidDisplayName,
   isValidUsername,
+  matchesIdentityUsername,
   normalizeUsername,
   storageLimitLabel,
 } from "../lib/meshline";
@@ -44,6 +45,11 @@ describe("Meshline local identity rules", () => {
     expect(isValidUsername("ab")).toBe(false);
     expect(isValidUsername("alice.example")).toBe(false);
     expect(isValidUsername("user with spaces")).toBe(false);
+  });
+
+  it("matches local login usernames without relying on a display name", () => {
+    expect(matchesIdentityUsername("@alex_mesh", "Alex_Mesh")).toBe(true);
+    expect(matchesIdentityUsername("@alex_mesh", "@other_user")).toBe(false);
   });
 });
 
