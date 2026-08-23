@@ -74,4 +74,6 @@
 - [x] Produce the corrected final Meshline 1.0.8 base APK with an opaque native update action and matched 1.0.8 OTA/service compatibility.
 - [ ] Generate the final 1.0.8 Android test APK from the verified contrast-safe base and verify its package metadata.
 - [x] Publish a matching production-apk JavaScript update for runtime 1.0.8 so the installed base can show Download update.
+- [ ] Identify why the installed 1.0.8 build reports current despite its matching published 1.0.8 OTA record.
+- [x] Publish the corrected visible-control bridge update for the proven installed 1.0.7 runtime without another APK.
 - [x] Push the current Meshline changes to the authorized GitHub repository and verify the remote branch.
