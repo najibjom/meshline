@@ -11,7 +11,8 @@ import { haptic } from "@/lib/haptics";
 
 export default function NewChatScreen() {
   const router = useRouter();
-  const { startConversation, validateUsername } = useMeshline();
+  const { saveContact, startConversation, validateUsername } = useMeshline();
+  const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
@@ -25,6 +26,7 @@ export default function NewChatScreen() {
     }
     setError("");
     setCreating(true);
+    await saveContact(displayName, username);
     const conversationId = await startConversation(username);
     haptic.light();
     router.replace({ pathname: "/chat/[id]", params: { id: conversationId } });
@@ -34,16 +36,18 @@ export default function NewChatScreen() {
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
-          <View style={styles.header}><Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable><Text style={styles.title}>New chat</Text><View style={styles.back} /></View>
-          <Text style={styles.subtitle}>Enter a Meshline username to create a text-only conversation.</Text>
+          <View style={styles.header}><Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable><Text style={styles.title}>New contact</Text><View style={styles.back} /></View>
+          <Text style={styles.subtitle}>Save a person locally, then open a private text conversation using their Meshline username.</Text>
           <SectionCard style={styles.searchCard}>
+            <Text style={styles.label}>DISPLAY NAME</Text>
+            <View style={styles.inputWrap}><TextInput value={displayName} onChangeText={setDisplayName} autoCapitalize="words" autoCorrect placeholder="How you know them" placeholderTextColor="#A5ADBC" style={[styles.input, { paddingLeft: 15 }]} returnKeyType="next" /></View>
             <Text style={styles.label}>USERNAME</Text>
             <View style={styles.inputWrap}><Text style={styles.prefix}>@</Text><TextInput value={username.replace(/^@/, "")} onChangeText={(value) => setUsername(value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} autoCapitalize="none" autoCorrect={false} placeholder="username" placeholderTextColor="#A5ADBC" style={styles.input} returnKeyType="done" onSubmitEditing={openChat} /></View>
             <Text style={styles.hint}>No address, phone number, or contact-book upload is needed.</Text>
           </SectionCard>
-          {username ? <View style={styles.preview}><Avatar label={normalized.slice(1) || "?"} size={52} tone="emerald" /><View style={styles.previewCopy}><Text style={styles.previewName}>{normalized}</Text><Text style={styles.previewText}>Local protocol-ready conversation</Text></View></View> : null}
+          {username ? <View style={styles.preview}><Avatar label={displayName || normalized.slice(1) || "?"} size={52} tone="emerald" /><View style={styles.previewCopy}><Text style={styles.previewName}>{displayName || normalized}</Text><Text style={styles.previewText}>{displayName ? normalized : "Local contact and protocol-ready conversation"}</Text></View></View> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <View style={styles.bottom}><PrimaryButton label={creating ? "Opening…" : "Open conversation"} onPress={openChat} icon="chat-bubble-outline" disabled={creating || !username} /></View>
+          <View style={styles.bottom}><PrimaryButton label={creating ? "Saving…" : "Save contact and chat"} onPress={openChat} icon="chat-bubble-outline" disabled={creating || !username} /></View>
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenContainer>
@@ -59,7 +63,7 @@ const styles = StyleSheet.create({
   title: { color: palette.ink, fontSize: 18, lineHeight: 24, fontWeight: "800" },
   subtitle: { color: palette.muted, fontSize: 15, lineHeight: 21, marginTop: 22, maxWidth: 315 },
   searchCard: { padding: 16, marginTop: 22 },
-  label: { color: "#7B8598", fontSize: 11, lineHeight: 15, fontWeight: "800", letterSpacing: 1.05, marginBottom: 7, marginLeft: 2 },
+  label: { color: "#7B8598", fontSize: 11, lineHeight: 15, fontWeight: "800", letterSpacing: 1.05, marginBottom: 7, marginLeft: 2, marginTop: 15 },
   inputWrap: { height: 54, borderRadius: 16, borderWidth: 1, borderColor: "#DDE2EC", backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center" },
   prefix: { color: palette.indigo, fontSize: 17, fontWeight: "800", paddingLeft: 16, marginRight: 1 },
   input: { flex: 1, height: "100%", color: palette.ink, fontSize: 16, paddingRight: 14 },

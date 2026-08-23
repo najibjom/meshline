@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import * as Clipboard from "expo-clipboard";
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { Avatar, MeshlineMark, palette, StatusPill } from "@/components/meshline-ui";
@@ -12,8 +13,10 @@ import { haptic } from "@/lib/haptics";
 export default function ChatScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { state, sendMessage } = useMeshline();
+  const { state, deleteMessage, sendMessage, toggleConversationPin } = useMeshline();
   const [draft, setDraft] = useState("");
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [actionMessage, setActionMessage] = useState<Message | null>(null);
   const listRef = useRef<FlatList<Message>>(null);
   const conversation = state.conversations.find((item) => item.id === id);
   const messages = useMemo(() => state.messages[id] ?? [], [id, state.messages]);
@@ -29,7 +32,19 @@ export default function ChatScreen() {
     const text = draft;
     setDraft("");
     haptic.light();
-    await sendMessage(conversation.id, text);
+    await sendMessage(conversation.id, text, replyTo ? { id: replyTo.id, body: replyTo.body } : undefined);
+    setReplyTo(null);
+  };
+
+  const copyMessage = async () => {
+    if (!actionMessage) return;
+    try {
+      await Clipboard.setStringAsync(actionMessage.body);
+      haptic.success();
+      setActionMessage(null);
+    } catch {
+      haptic.warning();
+    }
   };
 
   return (
@@ -39,17 +54,19 @@ export default function ChatScreen() {
           <Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={palette.ink} /></Pressable>
           {conversation.isGuide ? <View style={styles.guideMark}><MeshlineMark size={27} /></View> : <Avatar label={conversation.peerDisplayName} size={38} tone="emerald" />}
           <View style={styles.headerCopy}><Text style={styles.name}>{conversation.peerDisplayName}</Text><Text style={styles.handle}>{conversation.peerUsername}</Text></View>
-          <StatusPill icon="lock-outline" variant="success">Local</StatusPill>
+          <Pressable onPress={() => void toggleConversationPin(conversation.id)} hitSlop={8} style={({ pressed }) => [styles.pinButton, conversation.isPinned && styles.pinButtonActive, pressed && styles.pressed]} accessibilityLabel={conversation.isPinned ? "Unpin conversation" : "Pin conversation"}><MaterialIcons name="push-pin" size={18} color={conversation.isPinned ? "#FFFFFF" : palette.indigo} /></Pressable>
         </View>
         <FlatList
           ref={listRef}
           data={messages}
           keyExtractor={(message) => message.id}
           contentContainerStyle={styles.messages}
-          renderItem={({ item }) => <MessageBubble message={item} />}
+          renderItem={({ item }) => <MessageBubble message={item} onLongPress={() => item.direction !== "system" && setActionMessage(item)} />}
           ListHeaderComponent={<View style={styles.notice}><MaterialIcons name="info-outline" size={16} color="#75809A" /><Text style={styles.noticeText}>The messaging interface is working locally. Network transport and end-to-end encryption are protocol milestones, not active in this mobile prototype.</Text></View>}
         />
+        {actionMessage ? <View style={styles.actionTray}><View style={styles.actionTrayCopy}><Text numberOfLines={1} style={styles.actionTrayText}>{actionMessage.body}</Text></View><Pressable onPress={() => { setReplyTo(actionMessage); setActionMessage(null); }} style={styles.actionButton}><MaterialIcons name="reply" size={18} color={palette.indigo} /><Text style={styles.actionText}>Reply</Text></Pressable><Pressable onPress={() => void copyMessage()} style={styles.actionButton}><MaterialIcons name="content-copy" size={18} color={palette.indigo} /><Text style={styles.actionText}>Copy</Text></Pressable><Pressable onPress={() => { void deleteMessage(conversation.id, actionMessage.id); setActionMessage(null); haptic.warning(); }} style={styles.actionButton}><MaterialIcons name="delete-outline" size={19} color={palette.coral} /><Text style={[styles.actionText, { color: palette.coral }]}>Delete</Text></Pressable><Pressable onPress={() => setActionMessage(null)} hitSlop={8}><MaterialIcons name="close" size={20} color={palette.muted} /></Pressable></View> : null}
         <View style={styles.composerWrap}>
+          {replyTo ? <View style={styles.replyBar}><View style={styles.replyLine} /><View style={styles.replyCopy}><Text style={styles.replyLabel}>Replying to</Text><Text numberOfLines={1} style={styles.replyText}>{replyTo.body}</Text></View><Pressable onPress={() => setReplyTo(null)} hitSlop={8}><MaterialIcons name="close" size={18} color={palette.muted} /></Pressable></View> : null}
           <View style={styles.composer}><TextInput value={draft} onChangeText={setDraft} placeholder="Write a message" placeholderTextColor="#9099AA" style={styles.composerInput} multiline maxLength={2000} returnKeyType="default" /><Pressable onPress={send} disabled={!draft.trim()} style={({ pressed }) => [styles.send, !draft.trim() && styles.sendDisabled, pressed && draft.trim() && styles.pressed]}><MaterialIcons name="arrow-upward" size={20} color="#FFFFFF" /></Pressable></View>
           <Text style={styles.composerNote}>Text only · No media in this MVP</Text>
         </View>
@@ -58,18 +75,19 @@ export default function ChatScreen() {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message, onLongPress }: { message: Message; onLongPress: () => void }) {
   if (message.direction === "system") {
     return <View style={styles.system}><Text style={styles.systemText}>{message.body}</Text></View>;
   }
   const outbound = message.direction === "outbound";
   return (
-    <View style={[styles.messageWrap, outbound ? styles.outboundWrap : styles.inboundWrap]}>
+    <Pressable onLongPress={onLongPress} delayLongPress={260} style={[styles.messageWrap, outbound ? styles.outboundWrap : styles.inboundWrap]}>
       <View style={[styles.bubble, outbound ? styles.outboundBubble : styles.inboundBubble]}>
+        {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : styles.inboundReplyPreview]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : styles.inboundReplyText]}>{message.replyTo.body}</Text></View> : null}
         <Text style={[styles.messageBody, outbound ? styles.outboundText : styles.inboundText]}>{message.body}</Text>
         <View style={styles.messageMeta}><Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : "schedule"} size={14} color={message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -81,6 +99,8 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, gap: 0 },
   name: { color: palette.ink, fontSize: 15, lineHeight: 20, fontWeight: "800" },
   handle: { color: palette.muted, fontSize: 12, lineHeight: 16 },
+  pinButton: { width: 37, height: 37, borderRadius: 12, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
+  pinButtonActive: { backgroundColor: palette.indigo },
   messages: { padding: 15, paddingBottom: 22, flexGrow: 1 },
   notice: { flexDirection: "row", gap: 7, padding: 11, backgroundColor: "#EEF0F6", borderRadius: 13, marginBottom: 18, alignItems: "flex-start" },
   noticeText: { color: "#687387", fontSize: 12, lineHeight: 17, flex: 1 },
@@ -93,13 +113,29 @@ const styles = StyleSheet.create({
   messageBody: { fontSize: 15, lineHeight: 21 },
   outboundText: { color: "#FFFFFF" },
   inboundText: { color: palette.ink },
+  replyPreview: { borderRadius: 9, paddingHorizontal: 8, paddingVertical: 5, marginBottom: 7 },
+  outboundReplyPreview: { backgroundColor: "#5B6FEF" },
+  inboundReplyPreview: { backgroundColor: "#EEF0F5" },
+  replyPreviewText: { fontSize: 11, lineHeight: 15 },
+  outboundReplyText: { color: "#E6E9FF" },
+  inboundReplyText: { color: "#687387" },
   messageMeta: { flexDirection: "row", gap: 4, justifyContent: "flex-end", alignItems: "center", marginTop: 3 },
   messageTime: { fontSize: 10, lineHeight: 14 },
   outboundMeta: { color: "#DDE3FF" },
   inboundMeta: { color: "#98A1B3" },
   system: { alignSelf: "center", maxWidth: "88%", backgroundColor: "#EDF0F6", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 13, marginBottom: 13 },
   systemText: { color: "#667085", fontSize: 12, lineHeight: 17, textAlign: "center" },
+  actionTray: { minHeight: 58, paddingHorizontal: 14, gap: 10, flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderTopColor: palette.line, borderTopWidth: StyleSheet.hairlineWidth },
+  actionTrayCopy: { flex: 1, minWidth: 0 },
+  actionTrayText: { color: palette.muted, fontSize: 12, lineHeight: 16 },
+  actionButton: { alignItems: "center", gap: 2 },
+  actionText: { color: palette.indigo, fontSize: 10, lineHeight: 13, fontWeight: "700" },
   composerWrap: { paddingHorizontal: 13, paddingTop: 10, paddingBottom: 4, backgroundColor: "#FFFFFF", borderTopColor: palette.line, borderTopWidth: StyleSheet.hairlineWidth },
+  replyBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 7, paddingBottom: 9, gap: 9 },
+  replyLine: { width: 3, height: 30, borderRadius: 2, backgroundColor: palette.indigo },
+  replyCopy: { flex: 1 },
+  replyLabel: { color: palette.indigo, fontSize: 10, lineHeight: 13, fontWeight: "800" },
+  replyText: { color: palette.muted, fontSize: 12, lineHeight: 16 },
   composer: { minHeight: 48, maxHeight: 120, borderRadius: 17, backgroundColor: "#F0F2F7", flexDirection: "row", alignItems: "flex-end", paddingLeft: 14, paddingRight: 5, paddingVertical: 5 },
   composerInput: { flex: 1, minHeight: 38, maxHeight: 96, color: palette.ink, fontSize: 16, lineHeight: 21, paddingTop: 9, paddingBottom: 6 },
   send: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: palette.indigo, marginLeft: 5 },

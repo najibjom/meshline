@@ -19,9 +19,10 @@ export default function TabLayout() {
         tabBarStyle: [styles.tabBar, { height, paddingBottom: bottomPadding }],
         sceneStyle: styles.scene,
       }}
-    >
-      <Tabs.Screen name="index" options={{ title: "Chats", tabBarIcon: ({ color }) => <MaterialIcons name="chat-bubble-outline" size={23} color={color} /> }} />
-      <Tabs.Screen name="network" options={{ title: "Network", tabBarIcon: ({ color }) => <MaterialIcons name="hub" size={23} color={color} /> }} />
+      >
+        <Tabs.Screen name="index" options={{ title: "Chats", tabBarIcon: ({ color }) => <MaterialIcons name="chat-bubble-outline" size={23} color={color} /> }} />
+        <Tabs.Screen name="contacts" options={{ title: "Contacts", tabBarIcon: ({ color }) => <MaterialIcons name="people-outline" size={24} color={color} /> }} />
+        <Tabs.Screen name="network" options={{ title: "Network", tabBarIcon: ({ color }) => <MaterialIcons name="hub" size={23} color={color} /> }} />
       <Tabs.Screen name="profile" options={{ title: "Profile", tabBarIcon: ({ color }) => <MaterialIcons name="person-outline" size={24} color={color} /> }} />
     </Tabs>
   );

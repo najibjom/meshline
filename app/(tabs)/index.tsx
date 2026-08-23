@@ -20,7 +20,7 @@ export default function ChatsScreen() {
 
   const filteredConversations = useMemo(() => state.conversations
     .filter((conversation) => `${conversation.peerDisplayName} ${conversation.peerUsername}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()), [query, state.conversations]);
+    .sort((left, right) => Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned)) || new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()), [query, state.conversations]);
 
   if (!ready || !identity || !isAuthenticated) {
     return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
@@ -67,7 +67,7 @@ export default function ChatsScreen() {
   );
 }
 
-function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; isGuide?: boolean }; latest?: Message; onPress: () => void }) {
+function ConversationRow({ conversation, latest, onPress }: { conversation: { peerDisplayName: string; peerUsername: string; updatedAt: string; isGuide?: boolean; isPinned?: boolean }; latest?: Message; onPress: () => void }) {
   const preview = latest?.body ?? "No messages yet";
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.conversation, pressed && styles.pressed]}>
@@ -75,6 +75,7 @@ function ConversationRow({ conversation, latest, onPress }: { conversation: { pe
       <View style={styles.conversationCopy}>
         <View style={styles.conversationTop}>
           <Text numberOfLines={1} style={styles.conversationName}>{conversation.peerDisplayName}</Text>
+          {conversation.isPinned ? <MaterialIcons name="push-pin" size={14} color={palette.indigo} /> : null}
           <Text style={styles.conversationTime}>{formatConversationTime(conversation.updatedAt)}</Text>
         </View>
         <View style={styles.previewRow}>

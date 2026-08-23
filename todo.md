@@ -17,3 +17,9 @@
 - [x] Fix shared preview scrolling so all long Meshline screens expose content below the fold.
 - [x] Add separate display names and usernames to account creation, profiles, and identity presentation.
 - [x] Add separate Log in and Create account entry screens with local identity authentication.
+- [x] Add a local contacts experience with saved people, username search, and conversation actions.
+- [x] Polish text messaging with reply, copy, delete-for-me, and pinned conversations.
+- [ ] Add unread indicators when real inbound transport events are available.
+- [ ] Add on-device privacy controls including biometric lock, local-data retention, export, and device logout.
+- [ ] Produce a validated design for an audited encrypted two-device transport foundation.
+- [ ] Produce a decentralized username-resolution and encrypted relay architecture specification.

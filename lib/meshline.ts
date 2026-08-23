@@ -21,6 +21,14 @@ export type Conversation = {
   createdAt: string;
   updatedAt: string;
   isGuide?: boolean;
+  isPinned?: boolean;
+};
+
+export type Contact = {
+  id: string;
+  displayName: string;
+  username: string;
+  createdAt: string;
 };
 
 export type Message = {
@@ -30,6 +38,7 @@ export type Message = {
   direction: MessageDirection;
   status: DeliveryStatus;
   createdAt: string;
+  replyTo?: { id: string; body: string };
 };
 
 export type NetworkSettings = {
@@ -41,6 +50,7 @@ export type NetworkSettings = {
 
 export type MeshlineState = {
   identity: Identity | null;
+  contacts: Contact[];
   conversations: Conversation[];
   messages: Record<string, Message[]>;
   networkSettings: NetworkSettings;
@@ -60,6 +70,7 @@ const defaultNetworkSettings: NetworkSettings = {
 
 export const emptyMeshlineState: MeshlineState = {
   identity: null,
+  contacts: [],
   conversations: [],
   messages: {},
   networkSettings: defaultNetworkSettings,
@@ -94,6 +105,7 @@ export async function loadMeshlineState(): Promise<MeshlineState> {
     const parsed = JSON.parse(raw) as Partial<MeshlineState>;
     return {
       identity: parsed.identity ?? null,
+      contacts: parsed.contacts ?? [],
       conversations: parsed.conversations ?? [],
       messages: parsed.messages ?? {},
       networkSettings: { ...defaultNetworkSettings, ...parsed.networkSettings },
@@ -177,6 +189,7 @@ export async function makeIdentity(displayNameInput: string, usernameInput: stri
 
   return {
     identity: { displayName, username, deviceId, createdAt, recoveryAcknowledged: false },
+    contacts: [],
     conversations: [guideConversation],
     messages: { [guideConversation.id]: [guideMessage] },
     networkSettings: defaultNetworkSettings,

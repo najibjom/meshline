@@ -2,6 +2,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 import * as Crypto from "expo-crypto";
 
 import {
+  Contact,
   Conversation,
   emptyMeshlineState,
   Identity,
@@ -9,27 +10,34 @@ import {
   isValidUsername,
   loadMeshlineState,
   makeIdentity,
+  matchesIdentityUsername,
   Message,
   MeshlineState,
   NetworkSettings,
+  normalizeDisplayName,
   normalizeUsername,
   persistMeshlineState,
-  matchesIdentityUsername,
   verifyLocalIdentity,
 } from "@/lib/meshline";
+
+type ReplyReference = { id: string; body: string };
 
 type MeshlineContextValue = {
   ready: boolean;
   isAuthenticated: boolean;
   state: MeshlineState;
+  identity: Identity | null;
   createIdentity: (displayName: string, username: string, password: string) => Promise<void>;
   loginIdentity: (username: string, password: string) => Promise<boolean>;
   updateDisplayName: (displayName: string) => Promise<void>;
   acknowledgeRecovery: () => Promise<void>;
   startConversation: (username: string) => Promise<string>;
-  sendMessage: (conversationId: string, text: string) => Promise<void>;
+  saveContact: (displayName: string, username: string) => Promise<void>;
+  removeContact: (username: string) => Promise<void>;
+  toggleConversationPin: (conversationId: string) => Promise<void>;
+  sendMessage: (conversationId: string, text: string, replyTo?: ReplyReference) => Promise<void>;
+  deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   updateNetworkSettings: (settings: Partial<NetworkSettings>) => Promise<void>;
-  identity: Identity | null;
   validateDisplayName: (displayName: string) => boolean;
   validateUsername: (username: string) => boolean;
 };
@@ -71,18 +79,28 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
   }, [state.identity]);
 
   const acknowledgeRecovery = useCallback(async () => {
-    commit((current) => ({
-      ...current,
-      identity: current.identity ? { ...current.identity, recoveryAcknowledged: true } : null,
-    }));
+    commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, recoveryAcknowledged: true } : null }));
   }, [commit]);
 
   const updateDisplayName = useCallback(async (displayName: string) => {
-    const normalized = displayName.trim().replace(/\s+/g, " ");
+    const normalized = normalizeDisplayName(displayName);
+    commit((current) => ({ ...current, identity: current.identity ? { ...current.identity, displayName: normalized } : null }));
+  }, [commit]);
+
+  const saveContact = useCallback(async (displayNameInput: string, usernameInput: string) => {
+    const username = normalizeUsername(usernameInput);
+    const displayName = normalizeDisplayName(displayNameInput) || username.slice(1);
+    const contact: Contact = { id: username, username, displayName, createdAt: new Date().toISOString() };
     commit((current) => ({
       ...current,
-      identity: current.identity ? { ...current.identity, displayName: normalized } : null,
+      contacts: [contact, ...current.contacts.filter((candidate) => candidate.username !== username)],
+      conversations: current.conversations.map((conversation) => conversation.peerUsername === username ? { ...conversation, peerDisplayName: displayName } : conversation),
     }));
+  }, [commit]);
+
+  const removeContact = useCallback(async (usernameInput: string) => {
+    const username = normalizeUsername(usernameInput);
+    commit((current) => ({ ...current, contacts: current.contacts.filter((contact) => contact.username !== username) }));
   }, [commit]);
 
   const startConversation = useCallback(async (usernameInput: string) => {
@@ -91,10 +109,11 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     if (existing) return existing.id;
 
     const createdAt = new Date().toISOString();
+    const savedContact = state.contacts.find((contact) => contact.username === peerUsername);
     const conversation: Conversation = {
       id: Crypto.randomUUID(),
       peerUsername,
-      peerDisplayName: peerUsername.slice(1),
+      peerDisplayName: savedContact?.displayName ?? peerUsername.slice(1),
       createdAt,
       updatedAt: createdAt,
     };
@@ -106,47 +125,36 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
       status: "local",
       createdAt,
     };
-    const next = {
-      ...state,
-      conversations: [conversation, ...state.conversations],
-      messages: { ...state.messages, [conversation.id]: [message] },
-    };
+    const next = { ...state, conversations: [conversation, ...state.conversations], messages: { ...state.messages, [conversation.id]: [message] } };
     setState(next);
     await persistMeshlineState(next);
     return conversation.id;
   }, [state]);
 
-  const sendMessage = useCallback(async (conversationId: string, text: string) => {
+  const toggleConversationPin = useCallback(async (conversationId: string) => {
+    commit((current) => ({ ...current, conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, isPinned: !conversation.isPinned } : conversation) }));
+  }, [commit]);
+
+  const sendMessage = useCallback(async (conversationId: string, text: string, replyTo?: ReplyReference) => {
     const body = text.trim();
     if (!body) return;
     const createdAt = new Date().toISOString();
-    const message: Message = {
-      id: Crypto.randomUUID(),
-      conversationId,
-      body,
-      direction: "outbound",
-      status: "sending",
-      createdAt,
-    };
+    const message: Message = { id: Crypto.randomUUID(), conversationId, body, direction: "outbound", status: "sending", createdAt, replyTo };
     commit((current) => ({
       ...current,
-      conversations: current.conversations.map((conversation) =>
-        conversation.id === conversationId ? { ...conversation, updatedAt: createdAt } : conversation,
-      ),
+      conversations: current.conversations.map((conversation) => conversation.id === conversationId ? { ...conversation, updatedAt: createdAt } : conversation),
       messages: { ...current.messages, [conversationId]: [...(current.messages[conversationId] ?? []), message] },
     }));
-
     setTimeout(() => {
       commit((current) => ({
         ...current,
-        messages: {
-          ...current.messages,
-          [conversationId]: (current.messages[conversationId] ?? []).map((candidate) =>
-            candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate,
-          ),
-        },
+        messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).map((candidate) => candidate.id === message.id ? { ...candidate, status: "delivered" } : candidate) },
       }));
     }, 650);
+  }, [commit]);
+
+  const deleteMessage = useCallback(async (conversationId: string, messageId: string) => {
+    commit((current) => ({ ...current, messages: { ...current.messages, [conversationId]: (current.messages[conversationId] ?? []).filter((message) => message.id !== messageId) } }));
   }, [commit]);
 
   const updateNetworkSettings = useCallback(async (settings: Partial<NetworkSettings>) => {
@@ -157,17 +165,21 @@ export function MeshlineProvider({ children }: PropsWithChildren) {
     ready,
     isAuthenticated,
     state,
+    identity: state.identity,
     createIdentity,
     loginIdentity,
     updateDisplayName,
     acknowledgeRecovery,
     startConversation,
+    saveContact,
+    removeContact,
+    toggleConversationPin,
     sendMessage,
+    deleteMessage,
     updateNetworkSettings,
-    identity: state.identity,
     validateDisplayName: isValidDisplayName,
     validateUsername: isValidUsername,
-  }), [acknowledgeRecovery, createIdentity, isAuthenticated, loginIdentity, ready, sendMessage, startConversation, state, updateDisplayName, updateNetworkSettings]);
+  }), [acknowledgeRecovery, createIdentity, deleteMessage, isAuthenticated, loginIdentity, ready, removeContact, saveContact, sendMessage, startConversation, state, toggleConversationPin, updateDisplayName, updateNetworkSettings]);
 
   return <MeshlineContext.Provider value={value}>{children}</MeshlineContext.Provider>;
 }
