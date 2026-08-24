@@ -140,3 +140,7 @@
 - [x] Rebalance text, controls, connection status, and message surfaces for clear contrast in the all-dark design without altering messaging behavior.
 - [x] Increase composer and send-control prominence while using accessible near-white text and readable secondary labels across dark-navy screens.
 - [x] Publish the approved dark-navy interface as a fresh JavaScript-only production-apk update compatible with installed runtime 1.0.7, without changing any APK.
+- [x] Build separate Meshline 1.0.9 phone and Android-emulator APKs using the known install-compatible packaging approach, preserving all existing GitHub APK assets unchanged.
+- [x] Inspect both 1.0.9 packages and publish them as additional GitHub release assets without deleting or replacing earlier files.
+- [x] Keep the message composer visible above the Android keyboard while typing, matching standard messenger behavior.
+- [x] Shift Profile account-control row content slightly right for a more natural visual inset.

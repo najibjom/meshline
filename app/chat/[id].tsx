@@ -63,7 +63,7 @@ export default function ChatScreen() {
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })} keyboardVerticalOffset={0}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", android: "height" })} keyboardVerticalOffset={0}>
         <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color={colors.text} /></Pressable>
           {conversation.isSavedMessages ? <View style={styles.savedMark}><MaterialIcons name="bookmark" size={20} color="#FFFFFF" /></View> : conversation.isGuide ? <View style={styles.guideMark}><MeshlineMark size={27} /></View> : isGroup ? <View style={styles.spaceMark}><MaterialIcons name="group" size={22} color={palette.indigo} /></View> : isChannel ? <View style={styles.spaceMark}><MaterialIcons name="campaign" size={22} color={palette.indigo} /></View> : <Avatar label={conversation.peerDisplayName} size={38} tone="emerald" />}

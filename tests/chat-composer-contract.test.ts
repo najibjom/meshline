@@ -12,6 +12,10 @@ describe("Meshline chat composer contract", () => {
     expect(chatScreen).toContain('send: { width: 52, height: 52');
   });
 
+  it("uses keyboard avoidance that follows the Android keyboard height", () => {
+    expect(chatScreen).toContain('behavior={Platform.select({ ios: "padding", android: "height" })}');
+  });
+
   it("makes the built-in guide read-only instead of attempting a fake direct delivery", () => {
     expect(chatScreen).toContain('canPost && !conversation.isGuide');
     expect(chatScreen).toContain('Meshline Guide is read-only');

@@ -21,6 +21,17 @@ For a **new device** or a deliberately reset test device, download only the exac
 
 GitHub normalizes the parentheses in the emulator file’s original filename, so it displays the download as `meshline-1.0.8.1.apk`. The APK binary itself is unchanged. Do **not** uninstall a working Meshline app simply to reinstall it, because Meshline keeps identity and message data locally.
 
+## Additional 1.0.9 test packages
+
+The [Meshline 1.0.9 Android test release](https://github.com/najibjom/meshline/releases/tag/v1.0.9-android-test) adds separate signed packages containing the approved launcher branding, keyboard-safe message composer, Profile control inset, and current dark-navy interface. It **does not** remove or replace any earlier release asset.
+
+| Test device | File | CPU libraries | SHA-256 |
+|---|---|---|---|
+| Xiaomi Android phone | `meshline-1.0.9-phone.apk` | `armeabi-v7a`, `arm64-v8a` | `ed5782e4367164f428f81141e474f4a04f165283498e30fd5a278c964c25e9c1` |
+| Windows Android emulator | `meshline-1.0.9-emulator.apk` | `x86_64` | `3834ee1456b70734a12bbcb86b0dfcdbf3803907acc2fb5bad10aa043d700081` |
+
+The two archive structures and CPU libraries were verified before upload. Xiaomi installation remains a physical-device check; keep the proven 1.0.7 installation in place unless the owner deliberately chooses to test the new package.
+
 ## Two-device test checklist
 
 1. Keep the working app installed on both the Xiaomi and Windows Pixel emulator.
