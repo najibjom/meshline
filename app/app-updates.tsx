@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { SectionCard, palette, StatusPill } from "@/components/meshline-ui";
+import { SectionCard, StatusPill } from "@/components/meshline-ui";
 import {
   applyDownloadedMeshlineUpdate,
   checkForMeshlineUpdate,
@@ -14,8 +14,9 @@ import {
   type OtaUpdateState,
 } from "@/lib/ota-updates";
 import { haptic } from "@/lib/haptics";
+import { useColors } from "@/hooks/use-colors";
 
-const MESHLINE_BASE_RUNTIME = "1.0.8";
+const MESHLINE_COMPATIBLE_RUNTIME = "1.0.7";
 
 function label(state: OtaUpdateState) {
   if (state === "error") return "Check unavailable";
@@ -29,6 +30,7 @@ function label(state: OtaUpdateState) {
 export default function AppUpdatesScreen() {
   const router = useRouter();
   const network = Network.useNetworkState();
+  const colors = useColors();
   const [state, setState] = useState<OtaUpdateState>("current");
   const [message, setMessage] = useState("This installation already has the latest compatible Meshline update.");
   const [working, setWorking] = useState(false);
@@ -107,37 +109,37 @@ export default function AppUpdatesScreen() {
   const actionIcon = state === "available" ? "cloud-download" : state === "downloaded" ? "restart-alt" : "refresh";
 
   return (
-    <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
+    <ScreenContainer edges={["top", "bottom", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={styles.back}>
-            <MaterialIcons name="arrow-back" size={22} color={palette.ink} />
+          <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={[styles.back, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialIcons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>App updates</Text>
+          <Text style={[styles.title, { color: colors.text }]}>App updates</Text>
           <StatusPill icon="system-update-alt">Managed</StatusPill>
         </View>
 
         <SectionCard style={styles.hero}>
-          <View style={styles.heroIcon}>
-            <MaterialIcons name="cloud-download" size={28} color={palette.indigo} />
+          <View style={[styles.heroIcon, { backgroundColor: `${colors.tint}1C` }]}>
+            <MaterialIcons name="cloud-download" size={28} color={colors.tint} />
           </View>
-          <Text style={styles.heroTitle}>Keep Meshline current</Text>
-          <Text style={styles.heroText}>Compatible interface updates download inside Meshline. No APK reinstall is needed after this base version.</Text>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Keep Meshline current</Text>
+          <Text style={[styles.heroText, { color: colors.muted }]}>Compatible interface updates download inside Meshline. No APK reinstall is needed after this base version.</Text>
         </SectionCard>
 
-        <Text style={styles.sectionTitle}>UPDATE STATUS</Text>
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>UPDATE STATUS</Text>
         <SectionCard style={styles.statusCard}>
           <View style={styles.statusTop}>
-            <View style={styles.statusIcon}>
+            <View style={[styles.statusIcon, { backgroundColor: state === "error" ? `${colors.error}1C` : `${colors.tint}1C` }]}>
               {working ? (
-                <ActivityIndicator color={palette.indigo} size="small" />
+                <ActivityIndicator color={colors.tint} size="small" />
               ) : (
-                <MaterialIcons name={state === "error" ? "error-outline" : "system-update-alt"} size={22} color={state === "error" ? palette.coral : palette.indigo} />
+                <MaterialIcons name={state === "error" ? "error-outline" : "system-update-alt"} size={22} color={state === "error" ? colors.error : colors.tint} />
               )}
             </View>
             <View style={styles.statusCopy}>
-              <Text style={styles.statusLabel}>{label(state)}</Text>
-              <Text style={styles.statusMessage}>{message}</Text>
+              <Text style={[styles.statusLabel, { color: colors.text }]}>{label(state)}</Text>
+              <Text style={[styles.statusMessage, { color: colors.muted }]}>{message}</Text>
             </View>
           </View>
         </SectionCard>
@@ -149,13 +151,13 @@ export default function AppUpdatesScreen() {
           disabled={working}
           onPress={() => void action()}
           activeOpacity={0.84}
-          style={[styles.updateAction, working && styles.updateActionDisabled]}
+          style={[styles.updateAction, { backgroundColor: colors.tint, shadowColor: colors.tint }, working && styles.updateActionDisabled]}
         >
           <MaterialIcons name={actionIcon} size={21} color="#FFFFFF" />
           <Text style={styles.updateActionLabel}>{actionLabel}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.compatibility}>Base version {MESHLINE_BASE_RUNTIME} · production updates enabled</Text>
+        <Text style={[styles.compatibility, { color: colors.muted }]}>Compatible runtime {MESHLINE_COMPATIBLE_RUNTIME} · production updates enabled</Text>
       </ScrollView>
     </ScreenContainer>
   );
@@ -164,21 +166,21 @@ export default function AppUpdatesScreen() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: 18, paddingTop: 10, paddingBottom: 34 },
   header: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 },
-  back: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF" },
-  title: { flex: 1, color: palette.ink, fontSize: 24, lineHeight: 30, fontWeight: "800" },
+  back: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", borderWidth: 1 },
+  title: { flex: 1, fontSize: 24, lineHeight: 30, fontWeight: "800" },
   hero: { marginTop: 20, padding: 20, alignItems: "center" },
-  heroIcon: { width: 58, height: 58, borderRadius: 20, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
-  heroTitle: { color: palette.ink, fontSize: 19, lineHeight: 25, fontWeight: "800", marginTop: 13 },
-  heroText: { color: palette.muted, fontSize: 14, lineHeight: 20, marginTop: 5, textAlign: "center" },
-  sectionTitle: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 25, marginBottom: 8, marginLeft: 4 },
+  heroIcon: { width: 58, height: 58, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  heroTitle: { fontSize: 19, lineHeight: 25, fontWeight: "800", marginTop: 13 },
+  heroText: { fontSize: 14, lineHeight: 20, marginTop: 5, textAlign: "center" },
+  sectionTitle: { fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 25, marginBottom: 8, marginLeft: 4 },
   statusCard: { padding: 16 },
   statusTop: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
-  statusIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
+  statusIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   statusCopy: { flex: 1 },
-  statusLabel: { color: palette.ink, fontSize: 15, lineHeight: 20, fontWeight: "800" },
-  statusMessage: { color: palette.muted, fontSize: 13, lineHeight: 18, marginTop: 2 },
-  updateAction: { minHeight: 58, marginTop: 16, borderRadius: 17, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center", gap: 9, flexDirection: "row", paddingHorizontal: 20, shadowColor: palette.indigo, shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
+  statusLabel: { fontSize: 15, lineHeight: 20, fontWeight: "800" },
+  statusMessage: { fontSize: 13, lineHeight: 18, marginTop: 2 },
+  updateAction: { minHeight: 58, marginTop: 16, borderRadius: 17, alignItems: "center", justifyContent: "center", gap: 9, flexDirection: "row", paddingHorizontal: 20, shadowOpacity: 0.28, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
   updateActionLabel: { color: "#FFFFFF", fontSize: 16, lineHeight: 21, fontWeight: "800" },
   updateActionDisabled: { opacity: 0.58 },
-  compatibility: { textAlign: "center", color: "#7B8494", fontSize: 12, lineHeight: 17, marginTop: 12 },
+  compatibility: { textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 12 },
 });
