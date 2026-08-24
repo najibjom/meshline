@@ -17,7 +17,7 @@
     "release-phone-apk": {
       "extends": "production-apk",
       "env": {
-        "MESHLINE_ANDROID_ARCHS": "arm64-v8a"
+        "MESHLINE_ANDROID_ARCHS": "armeabi-v7a,arm64-v8a"
       },
       "android": {
         "buildType": "apk"

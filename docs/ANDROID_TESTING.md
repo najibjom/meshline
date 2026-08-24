@@ -4,7 +4,7 @@ This release provides **two separate APK files** so the phone and Windows Androi
 
 | Device | Download this file | Verified native architecture |
 |---|---|---|
-| Xiaomi or another modern Android phone | `Meshline-1.0.8-android-phone-arm64-v8a.apk` | `arm64-v8a` |
+| Xiaomi or another Android phone | `Meshline-1.0.8-android-phone-arm32-arm64.apk` | `armeabi-v7a` and `arm64-v8a` |
 | Android Studio Pixel emulator on Windows | `Meshline-1.0.8-windows-emulator-x86_64.apk` | `x86_64` |
 
 > Do not install both files on the same device. They are two builds of the same Meshline application, intended for separate test devices.
@@ -29,7 +29,7 @@ The current in-app update flow is user-controlled rather than an invisible backg
 
 ## Two-device test checklist
 
-1. Install the phone APK on the Xiaomi or other ARM64 Android phone.
+1. Install the dual-ARM phone APK on the Xiaomi or other Android phone.
 2. Install the x86_64 APK on the Windows Pixel emulator.
 3. Create two different Meshline identities and confirm the **Meshline connected** banner on both devices.
 4. Add the other account by `@username`, send plain test text in each direction, and reopen one device after it was closed to check queued delivery.
@@ -43,5 +43,5 @@ Meshline currently provides an **experimental encrypted relay proof** for text m
 
 | File | SHA-256 |
 |---|---|
-| `Meshline-1.0.8-android-phone-arm64-v8a.apk` | `95c67c67c9c2c9389cdc498b58784120cc6c37ecabd58a2ab50e6678bd4ffa86` |
+| `Meshline-1.0.8-android-phone-arm32-arm64.apk` | `82e7ed2e1c1507ab9ded746687ef134218c94454f71e4890583128e9994f4068` |
 | `Meshline-1.0.8-windows-emulator-x86_64.apk` | `24000dbad9316cd8cf88817b50bc3a8f16f71881349ce24735ad2af6770446cc` |

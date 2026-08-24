@@ -120,3 +120,4 @@
 - [ ] Add reliable messaging observability, offline-safe delivery states, unread indicators, and recovery behavior.
 - [x] Track real inbound unread messages locally and clear their indicators when the corresponding chat is opened.
 - [x] Publish signed Android APK release assets for phone and Windows-emulator testing on GitHub with clear installation and in-app-update guidance.
+- [ ] Diagnose and replace the GitHub phone APK after Android reports that the package appears invalid, without requiring deletion of the installed 1.0.7 app.
