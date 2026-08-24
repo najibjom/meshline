@@ -134,3 +134,5 @@
 - [x] Improve Chats, conversation, Profile, Network, group, and channel layout, hierarchy, and text-only interaction polish.
 - [x] Create a public GitHub README, contribution guidance, setup documentation, release guide, and honest product/security overview.
 - [x] Complete two-device regression guidance for direct, offline, group, and channel flows using the exact user-provided APKs.
+- [x] Apply the dark-navy and white design system to group and channel settings and membership-management screens.
+- [x] Improve visible queued, failed, and experimental space-delivery explanations without implying unsafe automatic retry or production E2EE.

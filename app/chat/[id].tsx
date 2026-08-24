@@ -10,6 +10,7 @@ import { formatMessageTime, isLocalChannelOwner, isLocalGroupOwner, Message, res
 import { useMeshline } from "@/lib/meshline-context";
 import { haptic } from "@/lib/haptics";
 import { useColors } from "@/hooks/use-colors";
+import { describeOutgoingMessageState } from "@/lib/delivery-status";
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -100,7 +101,7 @@ function MessageBubble({ message, isGuide, isSpace, onLongPress }: { message: Me
         {message.replyTo ? <View style={[styles.replyPreview, outbound ? styles.outboundReplyPreview : [styles.inboundReplyPreview, { backgroundColor: colors.background }]]}><Text numberOfLines={1} style={[styles.replyPreviewText, outbound ? styles.outboundReplyText : [styles.inboundReplyText, { color: colors.muted }]]}>{message.replyTo.body}</Text></View> : null}
         {!outbound && isSpace && message.senderUsername ? <Text style={[styles.groupSender, { color: colors.tint }]}>{message.senderUsername}</Text> : null}
         <Text style={[styles.messageBody, outbound ? styles.outboundText : [styles.inboundText, { color: colors.text }]]}>{message.body}</Text>
-        <View style={styles.messageMeta}>{outbound && message.status === "failed" ? <Text style={styles.failedMeta}>{isGuide ? "Guide only" : message.failureDetail ?? "Not sent"}</Text> : null}{outbound && message.status === "queued" ? <Text style={styles.queuedMeta}>{message.failureDetail ?? "Queued"}</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
+        <View style={styles.messageMeta}>{outbound && ["sending", "queued", "failed"].includes(message.status) ? <Text style={message.status === "failed" ? styles.failedMeta : styles.queuedMeta}>{isGuide ? "Guide only" : describeOutgoingMessageState(message.status, message.failureDetail)}</Text> : null}<Text style={[styles.messageTime, outbound ? styles.outboundMeta : styles.inboundMeta]}>{formatMessageTime(message.createdAt)}</Text>{outbound ? <MaterialIcons name={message.status === "delivered" ? "done-all" : message.status === "failed" ? "error-outline" : "schedule"} size={14} color={message.status === "failed" ? "#FFD3D8" : message.status === "delivered" ? "#DDE3FF" : "#CDD5FF"} /> : null}</View>
       </View>
     </Pressable>
   );

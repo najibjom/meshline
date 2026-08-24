@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRelayDeliveryFailure } from "../lib/delivery-status";
+import { describeOutgoingMessageState, describeRelayDeliveryFailure } from "../lib/delivery-status";
 
 describe("Meshline direct-message delivery feedback", () => {
   it("explains that a reachable service does not mean an unregistered recipient can receive a message", () => {
@@ -14,5 +14,16 @@ describe("Meshline direct-message delivery feedback", () => {
 
   it("explains a temporary durable relay-storage fault separately from recipient availability", () => {
     expect(describeRelayDeliveryFailure(new Error("Meshline durable relay storage is temporarily unavailable."))).toContain("temporarily saving messages offline");
+  });
+
+  it("distinguishes relay acceptance from recipient delivery without creating a retry promise", () => {
+    expect(describeOutgoingMessageState("sending")).toBe("Sending…");
+    expect(describeOutgoingMessageState("queued")).toBe("Relay accepted · waiting for recipient");
+    expect(describeOutgoingMessageState("queued", "Queued for 1 of 2 registered members.")).toContain("Relay accepted ·");
+  });
+
+  it("keeps failed messages visible and actionable without an automatic resend", () => {
+    expect(describeOutgoingMessageState("failed", "Recipient needs to open Meshline and wait for Meshline connected.")).toContain("Not sent · Recipient needs");
+    expect(describeOutgoingMessageState("failed")).toContain("connection banner");
   });
 });
