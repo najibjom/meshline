@@ -1,6 +1,6 @@
 # Meshline Android Testing
 
-The current proven Android base is **Meshline 1.0.7**. It is already installed and working on the Xiaomi and Windows emulator. Keep that installation: it supports the matching `production-apk` in-app update line and does not need to be replaced to receive compatible interface and JavaScript improvements.
+The current working Android setup uses the **exact APK files supplied by the project owner** for the Xiaomi phone and Windows Android emulator. Keep a working installation in place: it supports the matching `production-apk` in-app update line and does not need to be replaced to receive compatible interface and JavaScript improvements.
 
 > Do not install either published 1.0.8 test APK on a device with the working 1.0.7 app. Xiaomi rejected those new packages, so they are not the approved update path.
 
@@ -10,23 +10,25 @@ Open the existing Meshline 1.0.7 application on each device. In **Network → Ap
 
 The in-app update flow is user-controlled rather than an invisible background update. A new APK is only needed for a native Android change or a runtime-version change, and any future replacement APK must first be tested against the Xiaomi installer.
 
-## Proven 1.0.7 universal recovery APK
+## Exact working APK files
 
-For a **new device** or a deliberately reset test device, the exact known-working 1.0.7 build is published in the [proven base release](https://github.com/najibjom/meshline/releases/tag/v1.0.7-proven-base). It contains all three native architectures needed by the current testing setup.
+For a **new device** or a deliberately reset test device, download only the exact owner-provided file that previously worked on that device from the [working APK release](https://github.com/najibjom/meshline/releases/tag/user-provided-working-apks). The APK binaries were uploaded unchanged.
 
-| Test device | Proven file | Included native architecture |
+| Test device | Exact file | Direct download |
 |---|---|---|
-| Xiaomi or other Android phone | `Meshline-1.0.7-proven-universal.apk` | `armeabi-v7a`, `arm64-v8a` |
-| Android Studio Pixel emulator on Windows | `Meshline-1.0.7-proven-universal.apk` | `x86_64` |
+| Xiaomi Android phone | `meshline-1.0.7.apk` | [Download phone file](https://github.com/najibjom/meshline/releases/download/user-provided-working-apks/meshline-1.0.7.apk) |
+| Windows Android emulator | `meshline-1.0.8.1.apk` | [Download emulator file](https://github.com/najibjom/meshline/releases/download/user-provided-working-apks/meshline-1.0.8.1.apk) |
 
-Do **not** use this recovery file to replace a working 1.0.7 installation: it has the same version as the installed app and provides no upgrade. Do not uninstall the working app simply to reinstall it, because Meshline keeps identity and message data locally.
+GitHub normalizes the parentheses in the emulator file’s original filename, so it displays the download as `meshline-1.0.8.1.apk`. The APK binary itself is unchanged. Do **not** uninstall a working Meshline app simply to reinstall it, because Meshline keeps identity and message data locally.
 
 ## Two-device test checklist
 
-1. Keep the existing 1.0.7 app installed on both the Xiaomi and Windows Pixel emulator.
+1. Keep the working app installed on both the Xiaomi and Windows Pixel emulator.
 2. Confirm the **Meshline connected** banner on both devices.
 3. Add the other account by `@username`, send plain test text in each direction, and reopen one device after it was closed to check queued delivery.
-4. For groups or channels, use an owner account to change a title, membership, or group posting setting, then reopen the other device to check the experimental encrypted synchronization.
+4. Force-stop one device, send a plain test message from the other, then reopen the stopped device and confirm the message appears once.
+5. For a group or channel, use an owner account to change a title, membership, or group posting setting, then reopen the other device to check the experimental encrypted synchronization.
+6. If any step fails, record the device, app file, visible connection status, and exact error without sharing private message text, password material, recovery codes, or transport keys.
 
 ## Current security boundary
 
@@ -36,4 +38,5 @@ Meshline currently provides an **experimental encrypted relay proof** for text m
 
 | File | SHA-256 |
 |---|---|
-| `Meshline-1.0.7-proven-universal.apk` | `e36e4b77d5b18f465ffd95aeeeab3030c497ea3f7c0d8e0e82b3d513ee8f11ee` |
+| `meshline-1.0.7.apk` (phone) | `8e93c76ed5f0a98193aae809ed8b20923014b09b6136d28568ce170606153155` |
+| `meshline-1.0.8.1.apk` (emulator; GitHub-normalized filename) | `0892fc207f04a02c57979597660afcc14ed6a7f74621bacde22ff83e00b7aade` |

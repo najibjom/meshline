@@ -50,10 +50,10 @@ export default function ChatsScreen() {
           <>
             <View style={styles.header}>
               <View style={styles.brandRow}>
-                <MeshlineMark size={38} />
+                <MeshlineMark size={42} />
                 <View style={styles.brandCopy}>
-                  <Text style={[styles.brand, { color: colors.text }]}>{identity.displayName}</Text>
-                  <Text style={[styles.username, { color: colors.muted }]}>{identity.username}</Text>
+                  <Text style={[styles.brand, { color: colors.text }]}>Chats</Text>
+                  <Text style={[styles.username, { color: colors.muted }]}>{identity.displayName} · {identity.username}</Text>
                 </View>
               </View>
               <Pressable onPress={() => router.push("/new-space")} style={({ pressed }) => [styles.compose, pressed && styles.pressed]} accessibilityLabel="Create a chat, group, or channel">
@@ -115,18 +115,18 @@ function ConversationRow({ conversation, latest, onPress }: { conversation: { pe
 }
 
 const styles = StyleSheet.create({
-  connectionWrap: { paddingHorizontal: 18, paddingTop: 10 },
-  content: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 28, flexGrow: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 11 },
-  brandCopy: { gap: 1 },
-  brand: { color: palette.ink, fontSize: 23, lineHeight: 28, fontWeight: "800", letterSpacing: -0.4 },
-  username: { color: palette.muted, fontSize: 13, lineHeight: 17, fontWeight: "600" },
-  compose: { width: 42, height: 42, borderRadius: 15, backgroundColor: palette.indigo, justifyContent: "center", alignItems: "center" },
-  searchWrap: { height: 45, backgroundColor: "#ECEFF5", borderRadius: 14, flexDirection: "row", alignItems: "center", paddingHorizontal: 13, gap: 8 },
+  connectionWrap: { paddingHorizontal: 18, paddingTop: 8 },
+  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 32, flexGrow: 1 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 18 },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  brandCopy: { gap: 2, flexShrink: 1 },
+  brand: { color: palette.ink, fontSize: 25, lineHeight: 30, fontWeight: "800", letterSpacing: -0.55 },
+  username: { color: palette.muted, fontSize: 12, lineHeight: 17, fontWeight: "600" },
+  compose: { width: 44, height: 44, borderRadius: 15, backgroundColor: palette.indigo, justifyContent: "center", alignItems: "center", shadowColor: palette.navy, shadowOpacity: 0.16, shadowRadius: 9, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
+  searchWrap: { height: 48, backgroundColor: "#FFFFFF", borderRadius: 16, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 9 },
   search: { flex: 1, height: "100%", color: palette.ink, fontSize: 16 },
   searchHint: { fontSize: 12, lineHeight: 17, marginTop: 9, marginLeft: 3 },
-  sectionLabel: { color: "#8B95A7", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.05, marginTop: 22, marginBottom: 8, marginLeft: 4 },
+  sectionLabel: { color: "#5E7188", fontSize: 11, lineHeight: 16, fontWeight: "800", letterSpacing: 1.1, marginTop: 24, marginBottom: 9, marginLeft: 4 },
   globalRow: { minHeight: 62, borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 7 },
   globalCopy: { flex: 1, gap: 2 },
   globalTitle: { fontSize: 14, lineHeight: 19, fontWeight: "800" },
@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
   globalHandle: { fontWeight: "600" },
   globalTime: { fontSize: 11, lineHeight: 15, fontWeight: "600" },
   messageSearchIcon: { width: 38, height: 38, borderRadius: 13, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
-  conversation: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, borderBottomColor: "#E9ECF4", borderBottomWidth: StyleSheet.hairlineWidth },
+  conversation: { minHeight: 80, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomColor: "#D9E3EE", borderBottomWidth: StyleSheet.hairlineWidth },
   guideAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" },
   spaceAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigoSoft, alignItems: "center", justifyContent: "center" }, savedAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center" },
   conversationCopy: { flex: 1, gap: 5 },
   conversationTop: { flexDirection: "row", alignItems: "center", gap: 10 },
   conversationName: { flex: 1, color: palette.ink, fontSize: 16, lineHeight: 21, fontWeight: "700" },
-  conversationTime: { color: "#8B95A7", fontSize: 12, lineHeight: 16, fontWeight: "600" },
+  conversationTime: { color: "#5E7188", fontSize: 12, lineHeight: 16, fontWeight: "600" },
   unreadBadge: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, backgroundColor: palette.indigo, alignItems: "center", justifyContent: "center" },
   unreadBadgeText: { color: "#FFFFFF", fontSize: 10, lineHeight: 13, fontWeight: "800" },
   previewRow: { flexDirection: "row", gap: 6, alignItems: "center" },

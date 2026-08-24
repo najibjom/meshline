@@ -103,7 +103,7 @@
 - [ ] Preserve encrypted offline message delivery across relay restarts and client relaunches.
 - [x] Verify production durable relay registration, lookup, synthetic opaque enqueue, inbox read, and recipient acknowledgement with no user content.
 - [x] Publish the durable relay and offline-delivery client updates to production-apk for runtime 1.0.7.
-- [ ] Refine the text-only Meshline mobile design across primary chat, conversation, network, and profile flows.
+- [x] Refine the text-only Meshline mobile design across primary chat, conversation, network, and profile flows.
 - [x] Refresh core screen hierarchy, spacing, and theme-aware surfaces while preserving the fixed Chats connection banner and Network updates entry.
 - [x] Publish the theme-aware Network and conversation polish to production-apk for runtime 1.0.7.
 - [x] Apply the same theme-aware hierarchy and contrast treatment to the App updates screen without changing its proven 1.0.7 release flow.
@@ -124,3 +124,13 @@
 - [ ] Compare the previously working 1.0.7 phone APK with the two rejected 1.0.8 phone APKs and rebuild only after the packaging difference is identified.
 - [x] Restore the GitHub installation guidance to the proven Meshline 1.0.7 base and matching production-apk update line without requiring a phone reinstall.
 - [x] Upload the exact user-supplied working Xiaomi and emulator APK files to GitHub unchanged, after both files are received.
+- [ ] Create and apply a geometric linked-line Meshline logo with a dark navy and white visual system, without user avatars or unsupported decentralization claims.
+- [ ] Rework the Meshline logo only from the user’s selected reference and apply it only after explicit approval.
+- [x] Prepare and apply the user-selected dark-navy Meshline mark across app branding assets and project presentation.
+- [x] Establish a consistent dark-navy and white visual system across shared mobile components and primary screens.
+- [x] Apply the user-selected Meshline mark to launcher, splash, favicon, adaptive-icon, app metadata, and shared in-app brand rendering.
+- [x] Optimize the approved Meshline logo copies below the checkpoint limit while preserving the selected visual mark.
+- [x] Establish the dark-navy and white palette across Meshline theme tokens and shared UI primitives.
+- [x] Improve Chats, conversation, Profile, Network, group, and channel layout, hierarchy, and text-only interaction polish.
+- [x] Create a public GitHub README, contribution guidance, setup documentation, release guide, and honest product/security overview.
+- [x] Complete two-device regression guidance for direct, offline, group, and channel flows using the exact user-provided APKs.
