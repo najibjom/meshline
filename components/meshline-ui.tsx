@@ -4,20 +4,20 @@ import { Image, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "
 import { useColors } from "@/hooks/use-colors";
 
 export const palette = {
-  ink: "#102440",
-  navy: "#102440",
-  navyDeep: "#071629",
-  muted: "#5E7188",
-  soft: "#F4F7FB",
-  surface: "#FFFFFF",
-  line: "#D9E3EE",
-  indigo: "#1769AA",
-  indigoSoft: "#EAF4FE",
-  emerald: "#16845E",
-  emeraldSoft: "#E7F7F0",
-  amber: "#A86700",
-  amberSoft: "#FFF4DC",
-  coral: "#C83F58",
+  ink: "#F6F9FF",
+  navy: "#0B2038",
+  navyDeep: "#030B16",
+  muted: "#B4C5D9",
+  soft: "#061527",
+  surface: "#0B2038",
+  line: "#1A3C5C",
+  indigo: "#2E8DDB",
+  indigoSoft: "#132F4D",
+  emerald: "#54D39E",
+  emeraldSoft: "#123D36",
+  amber: "#FFD166",
+  amberSoft: "#3A2C12",
+  coral: "#FF92A2",
 };
 
 export function MeshlineMark({ size = 42 }: { size?: number }) {

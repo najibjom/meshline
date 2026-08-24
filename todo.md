@@ -136,3 +136,6 @@
 - [x] Complete two-device regression guidance for direct, offline, group, and channel flows using the exact user-provided APKs.
 - [x] Apply the dark-navy and white design system to group and channel settings and membership-management screens.
 - [x] Improve visible queued, failed, and experimental space-delivery explanations without implying unsafe automatic retry or production E2EE.
+- [x] Replace the white-first mobile interface with a cohesive dark-navy Meshline experience across chats, navigation, and supporting screens.
+- [x] Rebalance text, controls, connection status, and message surfaces for clear contrast in the all-dark design without altering messaging behavior.
+- [x] Increase composer and send-control prominence while using accessible near-white text and readable secondary labels across dark-navy screens.

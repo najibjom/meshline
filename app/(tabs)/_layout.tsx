@@ -31,7 +31,7 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: { backgroundColor: "#FFFFFF", borderTopColor: "#E8EBF3", borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 7 },
+  tabBar: { backgroundColor: palette.navyDeep, borderTopColor: palette.line, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8 },
   label: { fontSize: 11, fontWeight: "700", marginTop: 1 },
   scene: { flex: 1, minHeight: 0, overflow: "hidden" },
 });

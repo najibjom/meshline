@@ -7,8 +7,9 @@ const chatScreen = readFileSync(resolve(process.cwd(), "app/chat/[id].tsx"), "ut
 describe("Meshline chat composer contract", () => {
   it("keeps the disabled send arrow visible and exposes a send accessibility label", () => {
     expect(chatScreen).toContain('accessibilityLabel="Send message"');
-    expect(chatScreen).toContain('color={canSend ? "#FFFFFF" : palette.indigo}');
-    expect(chatScreen).toContain('sendDisabled: { backgroundColor: "#E7EBF3", borderColor: "#C5CDDA", borderWidth: 1 }');
+    expect(chatScreen).toContain('color={canSend ? "#FFFFFF" : colors.muted}');
+    expect(chatScreen).toContain('sendDisabled: { backgroundColor: "#14304B", borderColor: "#315B82", borderWidth: 1 }');
+    expect(chatScreen).toContain('send: { width: 52, height: 52');
   });
 
   it("makes the built-in guide read-only instead of attempting a fake direct delivery", () => {

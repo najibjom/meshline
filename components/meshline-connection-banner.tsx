@@ -107,9 +107,9 @@ export function MeshlineConnectionBanner() {
 
 const styles = StyleSheet.create({
   banner: { minHeight: 60, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14, borderWidth: 1 },
-  connecting: { backgroundColor: "#EEF0FF", borderColor: "#D8DCFF" },
-  connected: { backgroundColor: "#ECFAF4", borderColor: "#C8EEDC" },
-  problem: { backgroundColor: "#FFF3F4", borderColor: "#FFD8DB" },
+  connecting: { backgroundColor: "#102D52", borderColor: "#2D609A" },
+  connected: { backgroundColor: "#0C3934", borderColor: "#277A65" },
+  problem: { backgroundColor: "#43202B", borderColor: "#945064" },
   iconWrap: { width: 30, alignItems: "center" },
   copy: { flex: 1 },
   label: { color: palette.ink, fontSize: 13, lineHeight: 18, fontWeight: "800" },

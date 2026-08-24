@@ -12,7 +12,7 @@ export default function WelcomeScreen() {
   if (!ready) return <ScreenContainer className="items-center justify-center"><ActivityIndicator color={palette.indigo} /></ScreenContainer>;
 
   return (
-    <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-[#F6F7FB]" className="bg-[#F6F7FB]">
+    <ScreenContainer edges={["top", "bottom", "left", "right"]}>
       <View style={styles.content}>
         <View>
           <View style={styles.brandRow}><MeshlineMark size={58} /><Text style={styles.brand}>Meshline</Text></View>
@@ -36,18 +36,18 @@ const styles = StyleSheet.create({
   hero: { marginTop: 58 },
   title: { color: palette.ink, fontSize: 34, lineHeight: 40, fontWeight: "800", letterSpacing: -0.9, maxWidth: 310 },
   subtitle: { color: palette.muted, fontSize: 16, lineHeight: 23, marginTop: 12, maxWidth: 335 },
-  localIdentity: { flexDirection: "row", gap: 12, backgroundColor: "#FFFFFF", borderRadius: 18, borderColor: "#E4E8F2", borderWidth: 1, padding: 16, marginTop: 28, alignItems: "center" },
+  localIdentity: { flexDirection: "row", gap: 12, backgroundColor: palette.surface, borderRadius: 18, borderColor: palette.line, borderWidth: 1, padding: 16, marginTop: 28, alignItems: "center" },
   localCopy: { flex: 1 },
-  localLabel: { color: "#7C8799", fontSize: 10, lineHeight: 14, fontWeight: "800", letterSpacing: 0.95 },
+  localLabel: { color: palette.muted, fontSize: 10, lineHeight: 14, fontWeight: "800", letterSpacing: 0.95 },
   localName: { color: palette.ink, fontSize: 17, lineHeight: 23, fontWeight: "800", marginTop: 1 },
   localUsername: { color: palette.indigo, fontSize: 13, lineHeight: 18, fontWeight: "700" },
-  note: { flexDirection: "row", gap: 9, backgroundColor: "#EEF1F6", borderRadius: 16, padding: 14, marginTop: 28, alignItems: "flex-start" },
+  note: { flexDirection: "row", gap: 9, backgroundColor: palette.indigoSoft, borderRadius: 16, padding: 14, marginTop: 28, alignItems: "flex-start" },
   noteText: { flex: 1, color: palette.muted, fontSize: 13, lineHeight: 18 },
   actions: { gap: 11 },
   primary: { height: 54, borderRadius: 17, backgroundColor: palette.indigo, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   primaryText: { color: "#FFFFFF", fontSize: 16, lineHeight: 21, fontWeight: "800" },
   secondary: { height: 54, borderRadius: 17, backgroundColor: palette.indigoSoft, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   secondaryText: { color: palette.indigo, fontSize: 16, lineHeight: 21, fontWeight: "800" },
-  footer: { color: "#7D8799", textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 8, paddingHorizontal: 16 },
+  footer: { color: palette.muted, textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 8, paddingHorizontal: 16 },
   pressed: { opacity: 0.7, transform: [{ scale: 0.98 }] },
 });

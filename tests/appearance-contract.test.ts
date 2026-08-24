@@ -12,10 +12,10 @@ describe("Meshline appearance contract", () => {
     expect(root).toContain('colorScheme === "dark" ? "light" : "dark"');
   });
 
-  it("offers clearly labeled Light and Dark controls and persists the choice", () => {
-    expect(profile).toContain("Choose light or dark mode");
-    expect(profile).toContain(">Light</Text>");
-    expect(profile).toContain(">Dark</Text>");
+  it("offers clearly labeled Navy and Midnight controls and persists the choice", () => {
+    expect(profile).toContain("Choose navy or midnight");
+    expect(profile).toContain(">Navy</Text>");
+    expect(profile).toContain(">Midnight</Text>");
     expect(provider).toContain('AsyncStorage.setItem(THEME_PREFERENCE_KEY, scheme)');
   });
 });
