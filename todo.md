@@ -119,3 +119,4 @@
 - [ ] Physically verify a group/channel owner change and member removal on two installed runtime-1.0.7 clients.
 - [ ] Add reliable messaging observability, offline-safe delivery states, unread indicators, and recovery behavior.
 - [x] Track real inbound unread messages locally and clear their indicators when the corresponding chat is opened.
+- [ ] Publish signed Android APK release assets for phone and Windows-emulator testing on GitHub with clear installation and in-app-update guidance.

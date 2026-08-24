@@ -25,6 +25,10 @@ const bundleId =
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const schemeFromBundleId = `manus${timestamp}`;
+const androidBuildArchs = (process.env.MESHLINE_ANDROID_ARCHS ?? "armeabi-v7a,arm64-v8a")
+  .split(",")
+  .map((architecture) => architecture.trim())
+  .filter(Boolean);
 
 const env = {
   // App branding - update these values directly (do not use env vars)
@@ -145,7 +149,7 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         android: {
-          buildArchs: ["armeabi-v7a", "arm64-v8a"],
+          buildArchs: androidBuildArchs,
           minSdkVersion: 24,
         },
       },
