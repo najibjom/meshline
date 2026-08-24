@@ -123,3 +123,4 @@
 - [x] Diagnose and replace the GitHub phone APK after Android reports that the package appears invalid, without requiring deletion of the installed 1.0.7 app.
 - [ ] Compare the previously working 1.0.7 phone APK with the two rejected 1.0.8 phone APKs and rebuild only after the packaging difference is identified.
 - [x] Restore the GitHub installation guidance to the proven Meshline 1.0.7 base and matching production-apk update line without requiring a phone reinstall.
+- [x] Upload the exact user-supplied working Xiaomi and emulator APK files to GitHub unchanged, after both files are received.
