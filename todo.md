@@ -139,3 +139,4 @@
 - [x] Replace the white-first mobile interface with a cohesive dark-navy Meshline experience across chats, navigation, and supporting screens.
 - [x] Rebalance text, controls, connection status, and message surfaces for clear contrast in the all-dark design without altering messaging behavior.
 - [x] Increase composer and send-control prominence while using accessible near-white text and readable secondary labels across dark-navy screens.
+- [x] Publish the approved dark-navy interface as a fresh JavaScript-only production-apk update compatible with installed runtime 1.0.7, without changing any APK.
