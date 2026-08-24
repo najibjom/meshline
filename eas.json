@@ -8,13 +8,11 @@
       "channel": "preview"
     },
     "production": {
-      "channel": "production",
-      "autoIncrement": true
+      "channel": "production"
     },
     "production-apk": {
       "distribution": "internal",
-      "channel": "production-apk",
-      "autoIncrement": true
+      "channel": "production-apk"
     },
     "release-phone-apk": {
       "extends": "production-apk",
