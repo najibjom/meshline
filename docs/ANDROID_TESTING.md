@@ -32,6 +32,12 @@ The [Meshline 1.0.9 Android test release](https://github.com/najibjom/meshline/r
 
 The two archive structures and CPU libraries were verified before upload. Xiaomi installation remains a physical-device check; keep the proven 1.0.7 installation in place unless the owner deliberately chooses to test the new package.
 
+### 1.0.9 signer status — do not install over the working apps
+
+After the Xiaomi installation report, the archives were compared with Android's signature verifier. Both exact owner-provided working packages use certificate SHA-256 `a784e8bbd443be707ac6003d2132b92e24d404bec961bc32e89fe4237caece0a`; both newly built 1.0.9 packages use a different certificate SHA-256 `3a196626885688522e16c6df9e2be815a34cfb1388ef74c0d63751780f782a6b`.
+
+This signer mismatch prevents the 1.0.9 packages from serving as updates to the installed app identity. They are retained on GitHub for traceability, but should **not** be installed over the working phone or emulator applications. The safe path remains the exact owner-provided APKs plus their compatible runtime-1.0.7 in-app updates until the original signing key can be recovered and used for a future native package.
+
 ## Two-device test checklist
 
 1. Keep the working app installed on both the Xiaomi and Windows Pixel emulator.

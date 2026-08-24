@@ -144,3 +144,5 @@
 - [x] Inspect both 1.0.9 packages and publish them as additional GitHub release assets without deleting or replacing earlier files.
 - [x] Keep the message composer visible above the Android keyboard while typing, matching standard messenger behavior.
 - [x] Shift Profile account-control row content slightly right for a more natural visual inset.
+- [x] Compare the Xiaomi-rejected Meshline 1.0.9 phone APK with the exact owner-provided working 1.0.7 phone APK and document the packaging differences before any replacement build.
+- [x] Verify that the rejected 1.0.9 phone and emulator APKs use a different signing certificate from the exact working packages, so they cannot safely update those installations.
