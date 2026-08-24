@@ -148,3 +148,19 @@
 - [x] Verify that the rejected 1.0.9 phone and emulator APKs use a different signing certificate from the exact working packages, so they cannot safely update those installations.
 - [x] Investigate recovery or availability of the original Meshline signing key required for an install-compatible launcher-icon APK update; the available project credential and local history do not contain the original signer.
 - [x] Continue safe JavaScript-only interface fixes through the installed runtime-1.0.7 production-apk update path by publishing the keyboard-aware composer and Profile alignment update group b310edd4-c8af-41f5-a48e-9820bc4fb67c.
+- [ ] Create a separate new Meshline Android application with its own package identity and signing key, preserving existing working Meshline apps and GitHub APK assets unchanged.
+- [ ] Build, inspect, and publish separate phone and emulator packages for the new application without representing them as updates to the original Meshline app.
+- [ ] Prepare Meshline Next for a deliberate clean device installation after the user removes the old local apps, without deleting any GitHub assets or signing credentials.
+- [ ] Compare the Xiaomi-rejected 1.0.9 APK’s install-format properties with the exact working 1.0.7 APK after confirming the rejection also occurs on a clean installation.
+- [ ] Resolve the external Android build-capacity limit that prevented the prepared Meshline Next package from being queued.
+- [ ] Retire the separate Meshline Next Expo build project at the user’s request without deleting original Meshline sources, GitHub releases, or signing records.
+- [ ] Use a new Android signing credential and a separate package identity to build a completely fresh Meshline app when Android build capacity is available.
+- [ ] Use the existing `5_7FTFaXTI` Android build credential for the fresh Meshline package rather than creating another credential.
+- [ ] Connect an alternate Expo account with available Android build capacity to build the fresh Meshline app while preserving the original project and releases.
+- [x] Verify that the alternate Expo account browser session is active under nojeknaic’s team before any fresh Meshline project action.
+- [x] Privately export and verify the fresh Meshline Android signing credential before publishing any new APK, without placing key material in GitHub or app source.
+- [x] Verify that the stored alternate Expo build authorization reaches the new nojeknaics-team build account without exposing the token.
+- [x] Initialize an independent fresh Meshline project under the verified alternate team, with display name Meshline and a distinct Android package identity.
+- [x] Build and inspect a fresh phone APK before asking for the required Xiaomi clean-install test.
+- [x] Verify and link the fresh workspace to the user-created alternate Expo project, avoiding a duplicate project.
+- [x] Publish the inspected fresh Meshline phone APK as a new GitHub release asset without changing existing release files.

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { z } from "zod";
 
-import { acknowledgeEnvelope, enqueueEnvelope, getDevice, readInbox, registerDevice } from "./opaque-relay";
+import { acknowledgeEnvelope, enqueueEnvelope, getDevice, readDeliveryReceipts, readInbox, registerDevice } from "./opaque-relay";
 
 const usernameSchema = z.string().regex(/^@[a-z0-9_]{3,24}$/);
 const keySchema = z.string().min(40).max(120);
@@ -59,6 +59,18 @@ export function registerOpaqueRelayRoutes(app: Express) {
       return res.json({ envelopes: await readInbox(username) });
     } catch (error) {
       return durableRelayUnavailable(res, "inbox read", error);
+    }
+  });
+
+  app.get("/api/relay/receipts/:username", async (req, res) => {
+    const username = decodeURIComponent(req.params.username);
+    const rawIds = Array.isArray(req.query.id) ? req.query.id : [req.query.id];
+    const parsedIds = z.array(z.string().uuid()).min(1).max(100).safeParse(rawIds);
+    if (!usernameSchema.safeParse(username).success || !parsedIds.success) return res.status(400).json({ error: "Invalid relay receipt query." });
+    try {
+      return res.json({ receipts: await readDeliveryReceipts(username, parsedIds.data) });
+    } catch (error) {
+      return durableRelayUnavailable(res, "receipt read", error);
     }
   });
 

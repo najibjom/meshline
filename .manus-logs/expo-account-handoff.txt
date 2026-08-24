@@ -1,0 +1,5 @@
+Alternate Expo account handoff findings
+
+- The user’s browser session displayed a newly active Expo personal account and team workspace.
+- The original Meshline project and Android credential configuration must remain unchanged.
+- The fresh Meshline build needs authorization under the alternate account before it can use that account’s Android build capacity.

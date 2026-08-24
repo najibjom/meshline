@@ -21,6 +21,11 @@ export type OpaqueRelayEnvelope = {
   expiresAt: string;
 };
 
+export type RelayDeliveryReceipt = {
+  id: string;
+  acknowledgedAt: string;
+};
+
 const MAX_PENDING_ENVELOPES = 500;
 const ENVELOPE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -105,6 +110,16 @@ export async function readInbox(username: string): Promise<OpaqueRelayEnvelope[]
     .where(and(eq(relayEnvelopes.recipientUsername, username), isNull(relayEnvelopes.acknowledgedAt), gt(relayEnvelopes.expiresAt, new Date())))
     .orderBy(asc(relayEnvelopes.createdAt));
   return rows.map(asEnvelope);
+}
+
+export async function readDeliveryReceipts(senderUsername: string, envelopeIds: string[]): Promise<RelayDeliveryReceipt[]> {
+  const ids = Array.from(new Set(envelopeIds)).slice(0, 100);
+  if (!ids.length) return [];
+  const db = await removeExpiredEnvelopes();
+  const rows = await db.select({ id: relayEnvelopes.id, acknowledgedAt: relayEnvelopes.acknowledgedAt })
+    .from(relayEnvelopes)
+    .where(and(eq(relayEnvelopes.senderUsername, senderUsername), inArray(relayEnvelopes.id, ids), gt(relayEnvelopes.expiresAt, new Date())));
+  return rows.flatMap((row) => row.acknowledgedAt ? [{ id: row.id, acknowledgedAt: toIso(row.acknowledgedAt) }] : []);
 }
 
 export async function acknowledgeEnvelope(username: string, envelopeId: string) {
