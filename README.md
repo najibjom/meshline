@@ -63,6 +63,9 @@ Use the exact APK file that has already worked on each device. The public [Andro
 |---|---|
 | [Android testing](docs/ANDROID_TESTING.md) | Phone and Windows-emulator setup, safe updates, and two-device checks. |
 | [Transport security roadmap](docs/transport-security-references.md) | Honest explanation of today’s transport and the production-security path. |
+| [P2P demonstration foundations](docs/P2P_DEMONSTRATION_FOUNDATIONS.md) | Bounded direct and local-relay proof scope, evidence, limits, and next connectivity tests. |
+| [Decentralized migration audit](docs/DECENTRALIZED_MIGRATION_AUDIT.md) | File-by-file staged replacement of the current relay with a Rust/libp2p and encrypted-object path. |
+| [`p2p-demo/`](p2p-demo/README.md) | Isolated Rust/libp2p direct-envelope, receipt, Circuit Relay, and offline-object policy harness. |
 | [Project TODO](todo.md) | Product, reliability, documentation, and validation backlog. |
 
 ## Contribution principles
@@ -71,4 +74,4 @@ Contributions should preserve the text-only scope, keep security statements fact
 
 ## Roadmap
 
-The next practical work is to complete installed-device tests for offline direct messages and group/channel owner changes; clarify delivery recovery behavior; finish the mobile visual pass; and publish fuller development, release, and contribution guides. Production-grade messaging security remains a separate, longer-term protocol and audit program.
+The next practical work is to complete installed-device tests for delivery acknowledgements and username actions; extend the isolated P2P harness to carry opaque envelopes through a relayed route on separate networks; add transparent opt-in node controls; and introduce the Rust transport behind the existing mobile adapter only after stronger failure and security evidence. Production-grade messaging security remains a separate, longer-term protocol and audit program.

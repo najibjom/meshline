@@ -61,6 +61,7 @@ Thumbs.db
 *.tar.gz
 .cache/
 release-assets/
+p2p-demo/target/
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
