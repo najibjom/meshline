@@ -146,3 +146,5 @@
 - [x] Shift Profile account-control row content slightly right for a more natural visual inset.
 - [x] Compare the Xiaomi-rejected Meshline 1.0.9 phone APK with the exact owner-provided working 1.0.7 phone APK and document the packaging differences before any replacement build.
 - [x] Verify that the rejected 1.0.9 phone and emulator APKs use a different signing certificate from the exact working packages, so they cannot safely update those installations.
+- [x] Investigate recovery or availability of the original Meshline signing key required for an install-compatible launcher-icon APK update; the available project credential and local history do not contain the original signer.
+- [x] Continue safe JavaScript-only interface fixes through the installed runtime-1.0.7 production-apk update path by publishing the keyboard-aware composer and Profile alignment update group b310edd4-c8af-41f5-a48e-9820bc4fb67c.

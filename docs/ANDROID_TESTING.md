@@ -38,6 +38,8 @@ After the Xiaomi installation report, the archives were compared with Android's 
 
 This signer mismatch prevents the 1.0.9 packages from serving as updates to the installed app identity. They are retained on GitHub for traceability, but should **not** be installed over the working phone or emulator applications. The safe path remains the exact owner-provided APKs plus their compatible runtime-1.0.7 in-app updates until the original signing key can be recovered and used for a future native package.
 
+The currently available project credentials contain only the newer non-matching key, and the local project history contains no archived original keystore. Therefore, no additional native icon-update APK should be built from this environment until the original signer is recovered from the system or account that created the working packages.
+
 ## Two-device test checklist
 
 1. Keep the working app installed on both the Xiaomi and Windows Pixel emulator.
