@@ -37,6 +37,21 @@ export const relayDevices = mysqlTable("relay_devices", {
 });
 
 /**
+ * Bounded public directory records for owner-published Meshline channels.
+ * This stores no channel messages, membership list, or subscriber graph.
+ */
+export const relaySpaces = mysqlTable("relay_spaces", {
+  username: varchar("username", { length: 25 }).primaryKey(),
+  id: varchar("id", { length: 36 }).notNull(),
+  kind: mysqlEnum("kind", ["channel"]).notNull(),
+  title: varchar("title", { length: 60 }).notNull(),
+  description: varchar("description", { length: 180 }).notNull().default(""),
+  ownerUsername: varchar("owner_username", { length: 25 }).notNull(),
+  registeredAt: timestamp("registered_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
  * Opaque encrypted envelopes waiting for a recipient device. The relay stores
  * ciphertext only, retains envelopes for a limited time, and records an
  * acknowledgement without accessing message plaintext.
@@ -58,5 +73,7 @@ export const relayEnvelopes = mysqlTable("relay_envelopes", {
 
 export type RelayDevice = typeof relayDevices.$inferSelect;
 export type InsertRelayDevice = typeof relayDevices.$inferInsert;
+export type RelaySpace = typeof relaySpaces.$inferSelect;
+export type InsertRelaySpace = typeof relaySpaces.$inferInsert;
 export type RelayEnvelope = typeof relayEnvelopes.$inferSelect;
 export type InsertRelayEnvelope = typeof relayEnvelopes.$inferInsert;

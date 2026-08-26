@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { and, asc, desc, eq, gt, inArray, isNull, lt } from "drizzle-orm";
 
-import { relayDevices, relayEnvelopes } from "../drizzle/schema";
+import { relayDevices, relayEnvelopes, relaySpaces } from "../drizzle/schema";
 import { getDb } from "./db";
 
 export type RelayDeviceRecord = {
@@ -26,6 +26,17 @@ export type RelayDeliveryReceipt = {
   acknowledgedAt: string;
 };
 
+export type RelaySpaceRecord = {
+  id: string;
+  username: string;
+  kind: "channel";
+  title: string;
+  description: string;
+  ownerUsername: string;
+  registeredAt: string;
+  updatedAt: string;
+};
+
 const MAX_PENDING_ENVELOPES = 500;
 const ENVELOPE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -35,6 +46,19 @@ function toIso(value: Date | string) {
 
 function asDeviceRecord(device: typeof relayDevices.$inferSelect): RelayDeviceRecord {
   return { username: device.username, publicKey: device.publicKey, registeredAt: toIso(device.registeredAt) };
+}
+
+function asSpaceRecord(space: typeof relaySpaces.$inferSelect): RelaySpaceRecord {
+  return {
+    id: space.id,
+    username: space.username,
+    kind: "channel",
+    title: space.title,
+    description: space.description,
+    ownerUsername: space.ownerUsername,
+    registeredAt: toIso(space.registeredAt),
+    updatedAt: toIso(space.updatedAt),
+  };
 }
 
 function asEnvelope(envelope: typeof relayEnvelopes.$inferSelect): OpaqueRelayEnvelope {
@@ -87,6 +111,28 @@ export async function getDevice(username: string): Promise<RelayDeviceRecord | n
   const db = await requireRelayDb();
   const rows = await db.select().from(relayDevices).where(eq(relayDevices.username, username)).limit(1);
   return rows[0] ? asDeviceRecord(rows[0]) : null;
+}
+
+export async function registerSpace(input: Omit<RelaySpaceRecord, "registeredAt" | "updatedAt">): Promise<RelaySpaceRecord> {
+  const db = await requireRelayDb();
+  if (!await getDevice(input.ownerUsername)) throw new Error("Channel owner must have a registered Meshline device.");
+  const accountCollision = await db.select({ username: relayDevices.username }).from(relayDevices).where(eq(relayDevices.username, input.username)).limit(1);
+  if (accountCollision[0]) throw new Error("This username is already reserved by a Meshline account.");
+  const existing = await db.select().from(relaySpaces).where(eq(relaySpaces.username, input.username)).limit(1);
+  if (existing[0] && existing[0].ownerUsername !== input.ownerUsername) throw new Error("This channel username is already owned by another Meshline account.");
+  const now = new Date();
+  await db.insert(relaySpaces).values({ ...input, registeredAt: now, updatedAt: now }).onDuplicateKeyUpdate({
+    set: { id: input.id, kind: input.kind, title: input.title, description: input.description, ownerUsername: input.ownerUsername, updatedAt: now },
+  });
+  const rows = await db.select().from(relaySpaces).where(eq(relaySpaces.username, input.username)).limit(1);
+  if (!rows[0]) throw new Error("Meshline could not confirm channel directory publication.");
+  return asSpaceRecord(rows[0]);
+}
+
+export async function getSpace(username: string): Promise<RelaySpaceRecord | null> {
+  const db = await requireRelayDb();
+  const rows = await db.select().from(relaySpaces).where(eq(relaySpaces.username, username)).limit(1);
+  return rows[0] ? asSpaceRecord(rows[0]) : null;
 }
 
 export async function enqueueEnvelope(input: Omit<OpaqueRelayEnvelope, "id" | "createdAt" | "expiresAt">): Promise<OpaqueRelayEnvelope> {
