@@ -1,0 +1,22 @@
+[Unit]
+Description=Meshline bounded libp2p Circuit Relay v2 experiment
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=meshline
+Group=meshline
+WorkingDirectory=/opt/meshline-relay
+Environment=MESHLINE_RELAY_IDENTITY_FILE=/var/lib/meshline-relay/relay.identity
+ExecStart=/opt/meshline-relay/meshline-relay --port 4020 --public-address /ip4/__PUBLIC_IPV4__/tcp/4020 --max-reservations 2 --max-reservations-per-peer 1 --reservation-seconds 300 --max-circuits 2 --max-circuits-per-peer 1 --max-circuit-seconds 60 --max-circuit-bytes 65536 --run-seconds 0
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/meshline-relay
+
+[Install]
+WantedBy=multi-user.target
