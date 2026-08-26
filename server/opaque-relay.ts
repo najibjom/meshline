@@ -29,7 +29,7 @@ export type RelayDeliveryReceipt = {
 export type RelaySpaceRecord = {
   id: string;
   username: string;
-  kind: "channel";
+  kind: "group" | "channel";
   title: string;
   description: string;
   ownerUsername: string;
@@ -52,7 +52,7 @@ function asSpaceRecord(space: typeof relaySpaces.$inferSelect): RelaySpaceRecord
   return {
     id: space.id,
     username: space.username,
-    kind: "channel",
+    kind: space.kind,
     title: space.title,
     description: space.description,
     ownerUsername: space.ownerUsername,
@@ -115,17 +115,17 @@ export async function getDevice(username: string): Promise<RelayDeviceRecord | n
 
 export async function registerSpace(input: Omit<RelaySpaceRecord, "registeredAt" | "updatedAt">): Promise<RelaySpaceRecord> {
   const db = await requireRelayDb();
-  if (!await getDevice(input.ownerUsername)) throw new Error("Channel owner must have a registered Meshline device.");
+  if (!await getDevice(input.ownerUsername)) throw new Error("Space owner must have a registered Meshline device.");
   const accountCollision = await db.select({ username: relayDevices.username }).from(relayDevices).where(eq(relayDevices.username, input.username)).limit(1);
   if (accountCollision[0]) throw new Error("This username is already reserved by a Meshline account.");
   const existing = await db.select().from(relaySpaces).where(eq(relaySpaces.username, input.username)).limit(1);
-  if (existing[0] && existing[0].ownerUsername !== input.ownerUsername) throw new Error("This channel username is already owned by another Meshline account.");
+  if (existing[0] && existing[0].ownerUsername !== input.ownerUsername) throw new Error("This space username is already owned by another Meshline account.");
   const now = new Date();
   await db.insert(relaySpaces).values({ ...input, registeredAt: now, updatedAt: now }).onDuplicateKeyUpdate({
     set: { id: input.id, kind: input.kind, title: input.title, description: input.description, ownerUsername: input.ownerUsername, updatedAt: now },
   });
   const rows = await db.select().from(relaySpaces).where(eq(relaySpaces.username, input.username)).limit(1);
-  if (!rows[0]) throw new Error("Meshline could not confirm channel directory publication.");
+  if (!rows[0]) throw new Error("Meshline could not confirm public space directory publication.");
   return asSpaceRecord(rows[0]);
 }
 

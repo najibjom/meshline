@@ -37,13 +37,13 @@ export const relayDevices = mysqlTable("relay_devices", {
 });
 
 /**
- * Bounded public directory records for owner-published Meshline channels.
- * This stores no channel messages, membership list, or subscriber graph.
+ * Bounded public directory records for owner-published Meshline groups and channels.
+ * This stores no messages, membership list, or subscriber graph.
  */
 export const relaySpaces = mysqlTable("relay_spaces", {
   username: varchar("username", { length: 25 }).primaryKey(),
   id: varchar("id", { length: 36 }).notNull(),
-  kind: mysqlEnum("kind", ["channel"]).notNull(),
+  kind: mysqlEnum("kind", ["group", "channel"]).notNull(),
   title: varchar("title", { length: 60 }).notNull(),
   description: varchar("description", { length: 180 }).notNull().default(""),
   ownerUsername: varchar("owner_username", { length: 25 }).notNull(),

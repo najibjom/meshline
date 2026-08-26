@@ -1,0 +1,1 @@
+ALTER TABLE `relay_spaces` MODIFY COLUMN `kind` enum('group','channel') NOT NULL;

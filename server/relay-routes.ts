@@ -13,7 +13,7 @@ const envelopeSchema = z.object({
   ciphertext: z.string().min(20).max(8000),
 });
 const spaceSchema = z.object({
-  id: z.string().uuid(), username: usernameSchema, kind: z.literal("channel"), title: z.string().trim().min(2).max(60), description: z.string().trim().max(180), ownerUsername: usernameSchema,
+  id: z.string().uuid(), username: usernameSchema, kind: z.enum(["group", "channel"]), title: z.string().trim().min(2).max(60), description: z.string().trim().max(180), ownerUsername: usernameSchema,
 });
 
 function durableRelayUnavailable(res: import("express").Response, operation: string, error: unknown) {
@@ -46,22 +46,22 @@ export function registerOpaqueRelayRoutes(app: Express) {
 
   app.post("/api/relay/spaces", async (req, res) => {
     const parsed = spaceSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: "Invalid public channel directory record." });
+    if (!parsed.success) return res.status(400).json({ error: "Invalid public space directory record." });
     try { return res.status(201).json(await registerSpace(parsed.data)); }
     catch (error) {
       if (error instanceof Error && (error.message.includes("username is already") || error.message.includes("owner must"))) return res.status(409).json({ error: error.message });
-      return durableRelayUnavailable(res, "channel publication", error);
+      return durableRelayUnavailable(res, "space publication", error);
     }
   });
 
   app.get("/api/relay/space/:username", async (req, res) => {
     const username = decodeURIComponent(req.params.username);
-    if (!usernameSchema.safeParse(username).success) return res.status(400).json({ error: "Invalid channel username." });
+    if (!usernameSchema.safeParse(username).success) return res.status(400).json({ error: "Invalid space username." });
     try {
       const space = await getSpace(username);
-      if (!space) return res.status(404).json({ error: "Channel username not found." });
+      if (!space) return res.status(404).json({ error: "Space username not found." });
       return res.json(space);
-    } catch (error) { return durableRelayUnavailable(res, "channel lookup", error); }
+    } catch (error) { return durableRelayUnavailable(res, "space lookup", error); }
   });
 
   app.post("/api/relay/envelopes", async (req, res) => {
