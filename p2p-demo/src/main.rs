@@ -1,6 +1,3 @@
-mod protocol;
-mod storage;
-
 use std::{collections::HashSet, error::Error, time::Duration};
 
 use clap::Parser;
@@ -10,7 +7,7 @@ use libp2p::{
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, Multiaddr,
 };
-use protocol::{decrypt_text, encrypt_text, receipt_for, Envelope, Receipt, WireMessage};
+use meshline_p2p_demo::protocol::{decrypt_text, encrypt_text, receipt_for, Envelope, Receipt, WireMessage};
 use tokio::{select, time::interval};
 use tracing_subscriber::EnvFilter;
 

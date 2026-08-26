@@ -1,0 +1,41 @@
+name: Build Windows Meshline Relay
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "p2p-demo/**"
+      - ".github/workflows/build-windows-relay.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: p2p-demo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: Test bounded Rust harness
+        run: cargo test
+      - name: Build temporary relay executable
+        run: cargo build --release --bin meshline-relay
+      - name: Package Windows relay
+        shell: pwsh
+        run: |
+          $package = "meshline-relay-windows-x86_64"
+          New-Item -ItemType Directory -Force -Path $package | Out-Null
+          Copy-Item target/release/meshline-relay.exe "$package/meshline-relay.exe"
+          Copy-Item windows/Start-MeshlineRelay.ps1 "$package/Start-MeshlineRelay.ps1"
+          Copy-Item README.md "$package/README.md"
+          Compress-Archive -Path "$package/*" -DestinationPath "$package.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meshline-relay-windows-x86_64
+          path: p2p-demo/meshline-relay-windows-x86_64.zip
+          if-no-files-found: error

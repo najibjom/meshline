@@ -1,57 +1,46 @@
-# Meshline P2P Text Demonstration
+# Meshline P2P Transport Experiment
 
-> **Experimental developer proof only.** This program does not alter the shipped Meshline mobile app, replace its relay, or establish a production encryption protocol. It exists to demonstrate a small multi-peer libp2p transport path before native mobile integration is attempted.
+> **Experimental developer proof only.** This harness does not alter the installed Meshline app, replace the durable HTTPS relay, create a decentralized network, or establish a production encryption protocol.
 
-## What It Demonstrates
+## What Is Implemented
 
-Each process creates an independent libp2p peer identity, listens on TCP and QUIC, discovers local-network peers through mDNS, and can additionally dial explicit peer multiaddresses. Gossipsub signs network publications. This deliberately small proof enables direct publication to known subscribed peers, rather than depending on a mature mesh topology; it is not a scalability design. A text payload is encrypted into an authenticated envelope using a **test-only shared secret**; the resulting envelope binds its sender, recipient, ID, version, and expiry as associated data. Only the intended demonstration recipient attempts decryption and publishes a receipt.
+The harness provides a bounded Circuit Relay v2 role, a reserving private peer, and a dialing private peer. Relay use is transparent: all peers know the route includes the relay. The relay persists only its own harness identity and stores **no** Meshline messages, account records, channels, groups, membership, or plaintext. Test text travels in an authenticated envelope and produces a receipt. Direct Connection Upgrade through Relay (DCUtR) is attempted, but a failed upgrade leaves the relayed route available for the test envelope.
 
-This is deliberately separated from Meshline’s real account, username, and message models. It proves the basic P2P path while preventing a premature claim that the Expo application is already a decentralized messenger.
+The included offline-object fixture remains a separate deterministic model. It checks expiry, object/manifest binding, replica limits from one through five, duplicate assignments, and repair need. It does not yet replicate, store, or retrieve objects across the network.
 
-## Local Three-Peer Proof
+## Windows Temporary Relay
 
-Open three terminals in this directory. Use the same temporary secret in all of them. Start a hub first and copy the `LISTEN ... /p2p/...` TCP address that it prints.
+The Windows package contains `meshline-relay.exe` and `Start-MeshlineRelay.ps1`. It is intended only for a limited test window.
 
-```bash
-export MESHLINE_DEMO_SECRET='choose-a-temporary-test-secret'
-cargo run -- --tcp-port 4010 --quic-port 4010 --run-seconds 90
+1. Unzip the package to a normal folder such as `C:\MeshlineRelay`.
+2. Open **PowerShell as Administrator**, then allow incoming TCP and UDP traffic on port 4020:
+
+   ```powershell
+   New-NetFirewallRule -DisplayName "Meshline temporary relay TCP" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 4020
+   New-NetFirewallRule -DisplayName "Meshline temporary relay UDP" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 4020
+   ```
+
+3. In the home-router settings, forward both **TCP 4020** and **UDP 4020** to the Windows computer’s local IPv4 address. Find that address with `ipconfig`; use the IPv4 address shown for the active Wi-Fi or Ethernet connection.
+4. In the extracted folder, run `Start-MeshlineRelay.ps1`. Windows may request a network-permission confirmation; allow it only for the selected test network.
+5. Send only the printed `MESHLINE_RELAY_PEER` line and the public IP address to the test coordinator. **Never send** `relay.identity`, its contents, passwords, recovery codes, or a screenshot containing unrelated system details.
+
+The coordinator combines those two safe values into a relay address like this:
+
+```text
+/ip4/PUBLIC_IP/tcp/4020/p2p/RELAY_PEER_ID
 ```
 
-Start a recipient and then a sender, replacing the example address with the hub address printed above. Both peers can use mDNS on one LAN; `--peer` makes the local proof deterministic.
+## Local Validation
+
+Run the deterministic local three-process proof on a Rust development machine:
 
 ```bash
-cargo run -- --peer /ip4/127.0.0.1/tcp/4010/p2p/HUB_PEER_ID --run-seconds 90
-
-cargo run -- --peer /ip4/127.0.0.1/tcp/4010/p2p/HUB_PEER_ID --recipient RECIPIENT_PEER_ID --send 'Hello through the Meshline P2P proof' --run-seconds 45
+cd p2p-demo
+MESHLINE_DEMO_SECRET='temporary-test-secret' ./scripts/run-local-three-node-probe.sh
 ```
 
-The recipient prints `RECEIVED_ENCRYPTED_TEXT`, while the sender prints `DELIVERED` after it receives the receipt. The hub may print `FORWARDED_OPAQUE_ENVELOPE`; it does not decrypt the message.
+Success requires `LOCAL_THREE_NODE_PROBE_PASS`, a listener reservation, a relayed transport connection, recipient envelope authentication, and a receipt. A same-host DCUtR result is not evidence about internet NAT traversal.
 
-## What This Does Not Yet Prove
+## Current Limits
 
-This proof does not yet provide mobile-native Rust bindings, Internet NAT traversal, Circuit Relay/DCUtR, a DHT, durable distributed storage, replica repair, X3DH, Double Ratchet, key transparency, username records, group messaging, anonymity routing, or a security audit. It must never be described as production-grade end-to-end encryption.
-
-## Local Relay Reachability Probe
-
-The repository also includes a separate Circuit Relay and relay-client probe. It is a developer harness only: it verifies a local relay reservation and a relayed connection request, but it does not persist messages or make any public-network promise.
-
-```bash
-# Terminal A: start a local relay and copy its RELAY_LISTEN TCP address.
-cargo run --bin meshline-relay -- --port 4020 --run-seconds 90
-
-# Terminal B: reserve a relayed address and copy MESHLINE_RELAY_CLIENT_PEER.
-cargo run --bin meshline-relay-client -- --mode listener --relay /ip4/127.0.0.1/tcp/4020/p2p/RELAY_PEER_ID --run-seconds 90
-
-# Terminal C: ask for a relayed connection to the listener.
-cargo run --bin meshline-relay-client -- --mode dialer --relay /ip4/127.0.0.1/tcp/4020/p2p/RELAY_PEER_ID --remote-peer LISTENER_PEER_ID --run-seconds 45
-```
-
-Expected evidence is `RELAY_RESERVATION_ACCEPTED` at the listener and `RELAY_CONNECTION_ESTABLISHED` at the dialer. When both clients run on the same host, a later direct-upgrade attempt can fail because the test does not reproduce separate NATs; that does not invalidate the established relayed fallback route. A later stage must add a real opaque-envelope exchange over this path and test DCUtR across two private networks separately from relay fallback.
-
-## Offline Object and Replica Policy Fixture
-
-`src/storage.rs` is a non-networked protocol fixture for the later distributed-storage phase. It defines an expiring encrypted-object manifest, a bounded replica target of one to five nodes, and a local replica ledger. Its deterministic tests reject expired objects, invalid replication policy, and duplicate assignments; they also show that a missing replica creates an explicit repair need. It does **not** store objects on peers, prove storage, choose peers, or make a distributed-storage claim.
-
-## Next Engineering Gate
-
-The next iteration replaces the local hub with a separate public Circuit Relay and demonstrates two private peers using a relayed connection followed by a best-effort direct connection upgrade. That work must include an explicit failure mode: when direct upgrade fails, encrypted envelope delivery continues through the relay rather than disappearing.
+This is not mobile-integrated: an Android Meshline app cannot yet participate as a Rust/libp2p peer. A full real-network test therefore needs the Windows relay plus two separate machines or networks running the temporary peer harness. The present HTTPS relay remains the only durable offline fallback for the shipped app.
